@@ -108,7 +108,7 @@
           <div class="w-6 h-0.5 bg-slate-300"></div>
           <li class="step-indicator flex-1 flex items-center space-x-2 text-slate-400" data-step="3">
             <span class="step-badge w-6 h-6 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-xs">3</span>
-            <span class="step-title">2. 排除該班導師/行政</span>
+            <span class="step-title">2. 只採計長期代理和專任</span>
           </li>
           <div class="w-6 h-0.5 bg-slate-300"></div>
           <li class="step-indicator flex-1 flex items-center space-x-2 text-slate-400" data-step="4">
@@ -296,7 +296,7 @@
             ← 回上一步 (檔案匯入)
           </button>
           <button id="btn-goto-step-3" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
-            <span>各班任課審核無誤，進行第 2 步【排除行政與導師】</span>
+            <span>各班任課審核無誤，進行第 2 步【只採計長期代理和專任】</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </button>
         </div>
@@ -304,17 +304,17 @@
     </section>
 
     <!-- ============================================================== -->
-    <!-- STEP 3: 規則 2【只有專任老師和長期代理老師排代導 (排除行政/導師)】 -->
+    <!-- STEP 3: 規則 2【只採計長期代理和專任 (未在教師名冊者不採計)】 -->
     <!-- ============================================================== -->
     <section id="step-3-content" class="step-panel space-y-6 hidden">
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
           <div>
             <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 mb-1">
-              規則 2 審核：只有專任老師和長期代理老師排代導
+              規則 2 審核：只採計長期代理和專任
             </div>
-            <h2 class="text-lg font-bold text-slate-800">各班身分資格審查（在此步驟正式排除「該班班導師」、「行政人員」）</h2>
-            <p class="text-xs text-slate-500 mt-0.5">系統依據規則自動排除校長、主任、組長與該班導師。您可切換各班確認合格名冊，亦可隨時手動修正。</p>
+            <h2 class="text-lg font-bold text-slate-800">各班身分資格審查（只採計長期代理與專任；未在教師名冊者不採計）</h2>
+            <p class="text-xs text-slate-500 mt-0.5">系統依據規則：僅採計「長期代理」與「專任教師」，且<span class="text-indigo-600 font-bold">必須名列於教師名冊中</span>；行政人員、導師或未在名冊者一律不予採計。</p>
           </div>
           <div>
             <span id="step3-class-summary" class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-700 rounded-lg">目前班級：—</span>
@@ -337,9 +337,10 @@
                 <th class="p-3 w-12 text-center">#</th>
                 <th class="p-3">姓名</th>
                 <th class="p-3">任課科目</th>
+                <th class="p-3">教師名冊核對</th>
                 <th class="p-3">聘任身分</th>
                 <th class="p-3">現任職務</th>
-                <th class="p-3">規則 2 判定狀態</th>
+                <th class="p-3">採計判定狀態</th>
                 <th class="p-3 text-center w-32">資格覆核</th>
               </tr>
             </thead>
@@ -677,6 +678,7 @@
     let senioritySortOrder = 'asc'; // 'asc': 低至高, 'desc': 高至低
     let selectedClassId = ''; // 當前所選檢視班級
     let step6ViewMode = 'all'; // 'all' or 'single'
+    let hasUploadedRoster = false; // 是否已匯入名冊
 
     // 科目分類優先度 (國 -> 英 -> 數 -> 社 -> 自 -> 藝)
     const SUBJECT_CATEGORIES = {
@@ -888,13 +890,96 @@
       const hints = {
         1: '步驟 1：匯入配課表、年資表與名冊表。系統已自動整合全校各班師資清單。',
         2: '步驟 2 (規則 1)：各班任課審核。只有在該班有任課者才能排該班代導。',
-        3: '步驟 3 (規則 2)：各班身分審核。在此步驟排除該班班導師與行政主管。',
+        3: '步驟 3 (規則 2)：只採計長期代理和專任教師，若未列於教師名冊則不予採計。',
         4: '步驟 4 (規則 3 & 4)：各班長期代理教師科別排序。依「國英數社自藝」順位排列。',
         5: '步驟 5 (規則 5)：各班專任正式教師年資排序。依年資排序；年資相同時年紀輕者優先。',
         6: '步驟 6：全校序位總表已完成！完全依據指定二列格式呈現，長代老師標以鮮明黃底。'
       };
       if (bannerText) bannerText.textContent = hints[targetStep] || '';
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function loadSampleData() {
+      hasUploadedRoster = true;
+      // 示範資料：完全對照截圖中的班級與教師姓名呈現，並加入「未在名冊」之示範
+      schoolClasses = [
+        {
+          className: '701',
+          classTeacher: '洪淑芬',
+          teachers: [
+            { id: 'c1_t1', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t2', name: '孔祥泰', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 2.0, birth: '85.10.12 (30歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t3', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t4', name: '陳嬿竹', subject: '歷史', category: '社會', type: '正式教師', role: '專任教師', seniority: 5.0, birth: '80.01.20 (35歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t5', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t6', name: '胡鈺敏', subject: '視覺藝術', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 7.0, birth: '77.08.05 (38歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t7', name: '王貞婷', subject: '生物', category: '自然', type: '正式教師', role: '專任教師', seniority: 8.0, birth: '76.11.23 (39歲)', hours: 3, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t8', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t9', name: '劉育如', subject: '童軍', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t10', name: '鄭佳妍', subject: '健體', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 12.0, birth: '71.12.30 (44歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t11', name: '江校外', subject: '社團彈性', category: '藝能科', type: '兼課/鐘點', role: '兼課教師', seniority: 0, birth: '', hours: 1, hasTeaching: true, inRoster: false, isQualifiedStep1: true, isQualifiedStep2: false }
+          ]
+        },
+        {
+          className: '702',
+          classTeacher: '曾志明',
+          teachers: [
+            { id: 'c2_t1', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t2', name: '黃泳淳', subject: '英語', category: '英文', type: '長期代理', role: '專任教師', seniority: 2.0, birth: '86.09.28 (29歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t3', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t4', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t5', name: '李柏勳', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 4.0, birth: '81.08.14 (34歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t6', name: '胡鈺敏', subject: '美勞', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 7.0, birth: '77.08.05 (38歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t7', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t8', name: '魏雅苓', subject: '理化', category: '自然', type: '正式教師', role: '專任教師', seniority: 9.5, birth: '73.02.26 (42歲)', hours: 3, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t9', name: '劉育如', subject: '體育', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true }
+          ]
+        },
+        {
+          className: '703',
+          classTeacher: '張秋蘭',
+          teachers: [
+            { id: 'c3_t1', name: '施盈安', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '88.05.10 (27歲)', hours: 5, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t2', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t3', name: '李昭玲', subject: '英語', category: '英文', type: '長期代理', role: '專任教師', seniority: 2.0, birth: '86.11.03 (29歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t4', name: '陳天宇', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '85.02.14 (30歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t5', name: '許家家', subject: '社會', category: '社會', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '83.06.18 (32歲)', hours: 3, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t6', name: '孔祥泰', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 2.0, birth: '85.10.12 (30歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t7', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t8', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t9', name: '陳嬿竹', subject: '歷史', category: '社會', type: '正式教師', role: '專任教師', seniority: 5.0, birth: '80.01.20 (35歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t10', name: '胡鈺敏', subject: '美術', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 7.0, birth: '77.08.05 (38歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t11', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t12', name: '劉育如', subject: '體育', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true }
+          ]
+        },
+        {
+          className: '704',
+          classTeacher: '黃偉芬',
+          teachers: [
+            { id: 'c4_t1', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t2', name: '孔祥泰', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 2.0, birth: '85.10.12 (30歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t3', name: '李昭玲', subject: '英語', category: '英文', type: '長期代理', role: '專任教師', seniority: 2.0, birth: '86.11.03 (29歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t4', name: '許家家', subject: '社會', category: '社會', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '83.06.18 (32歲)', hours: 3, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t5', name: '陳天宇', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '85.02.14 (30歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t6', name: '黃偉芬', subject: '國文(導師)', category: '國文', type: '正式教師', role: '導師', seniority: 5.0, birth: '80.09.12 (35歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: false },
+            { id: 'c4_t7', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t8', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t9', name: '陳嬿竹', subject: '歷史', category: '社會', type: '正式教師', role: '專任教師', seniority: 5.0, birth: '80.01.20 (35歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t10', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t11', name: '劉育如', subject: '體育', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t12', name: '張淑珍', subject: '家政', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 15.0, birth: '68.03.14 (47歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true }
+          ]
+        }
+      ];
+
+      selectedClassId = schoolClasses[0].className;
+      renderClassesOverview();
+      document.getElementById('file-schedule-status').innerHTML = '<span class="text-emerald-600 font-semibold">✓ 示範檔 1 (配課表) 已載入 4 個班級</span>';
+      document.getElementById('file-seniority-status').innerHTML = '<span class="text-emerald-600 font-semibold">✓ 示範檔 2 (年資表) 已就緒</span>';
+      document.getElementById('file-roster-status').innerHTML = '<span class="text-emerald-600 font-semibold">✓ 示範檔 3 (名冊表) 已就緒 (已連線名冊核對)</span>';
+      document.getElementById('btn-goto-step-2').removeAttribute('disabled');
+      showToast('已載入示範資料！第 2 步將只採計長期代理和專任，未在名冊者不採計。', 'success');
     }
 
     function loadSampleData() {
@@ -1125,6 +1210,7 @@
       }
 
       if (nameCol === -1) nameCol = 0;
+      hasUploadedRoster = true;
 
       for (let r = headerRowIndex + 1; r < rows.length; r++) {
         const row = rows[r];
@@ -1155,6 +1241,7 @@
           ...existing,
           type: type, // 以名冊表為最高權威依據
           fromRoster: true, // 標記為名冊來源
+          inRoster: true,   // 確定在名冊內
           role: role || existing.role || '專任教師',
           birth: birth || existing.birth || '',
           defaultSubject: subject || existing.defaultSubject || ''
@@ -1175,6 +1262,12 @@
             if (g.fromRoster || g.type) t.type = g.type;
             if (g.role) t.role = g.role;
             if (g.birth) t.birth = g.birth;
+            t.inRoster = Boolean(g.fromRoster || g.inRoster);
+          } else {
+            // 若名冊已匯入但名冊中查無此人
+            if (hasUploadedRoster) {
+              t.inRoster = false;
+            }
           }
         });
       });
@@ -1235,20 +1328,22 @@
 
             let existingTeacher = targetClass.teachers.find(t => t.name === teacherName);
             if (!existingTeacher) {
-              const g = globalTeacherMap.get(teacherName) || {};
+              const g = globalTeacherMap.get(teacherName);
+              const inRoster = g ? Boolean(g.fromRoster || g.inRoster) : (hasUploadedRoster ? false : true);
               targetClass.teachers.push({
                 id: `ct_${targetClass.className}_${Math.random().toString(36).substr(2, 6)}`,
                 name: teacherName,
                 subject: actualSubject,
                 category: detectCategory(actualSubject),
-                type: g.type || '正式教師',
-                role: isClassTeacher ? '導師' : (g.role || '專任教師'),
-                seniority: g.seniority || 1.0,
-                birth: g.birth || '',
+                type: g?.type || '正式教師',
+                role: isClassTeacher ? '導師' : (g?.role || '專任教師'),
+                seniority: g?.seniority || 1.0,
+                birth: g?.birth || '',
                 hours: 4,
                 hasTeaching: true,
+                inRoster: inRoster,
                 isQualifiedStep1: true,
-                isQualifiedStep2: !isClassTeacher && (g.role !== '校長/兼行政主管')
+                isQualifiedStep2: !isClassTeacher && (g?.role !== '校長/兼行政主管') && inRoster
               });
             } else {
               existingTeacher.hours = (existingTeacher.hours || 0) + 2;
@@ -1293,20 +1388,22 @@
 
           const teachers = classMap.get(cName);
           if (!teachers.find(t => t.name === tName)) {
-            const g = globalTeacherMap.get(tName) || {};
+            const g = globalTeacherMap.get(tName);
+            const inRoster = g ? Boolean(g.fromRoster || g.inRoster) : (hasUploadedRoster ? false : true);
             teachers.push({
               id: `ct_${cName}_${Math.random().toString(36).substr(2, 6)}`,
               name: tName,
               subject: sub,
               category: detectCategory(sub),
-              type: g.type || '正式教師',
-              role: g.role || '專任教師',
-              seniority: g.seniority || 1.0,
-              birth: g.birth || '',
+              type: g?.type || '正式教師',
+              role: g?.role || '專任教師',
+              seniority: g?.seniority || 1.0,
+              birth: g?.birth || '',
               hours: 4,
               hasTeaching: true,
+              inRoster: inRoster,
               isQualifiedStep1: true,
-              isQualifiedStep2: g.role !== '校長/兼行政主管' && g.role !== '導師'
+              isQualifiedStep2: g?.role !== '校長/兼行政主管' && g?.role !== '導師' && inRoster
             });
           }
         }
@@ -1477,15 +1574,19 @@
     function goToStep3() {
       schoolClasses.forEach(c => {
         c.teachers.forEach(t => {
-          const isRoleOk = (t.role === '專任教師') && (t.type === '長期代理' || t.type === '正式教師');
-          t.isQualifiedStep2 = Boolean(t.isQualifiedStep1 && isRoleOk);
+          // 規則 2：只採計長期代理和專任；未在教師名冊者不採計
+          const inRosterOk = t.inRoster !== false; // 若不在名冊則為 false
+          const isProxyOrFormal = (t.type === '長期代理' || t.type === '正式教師');
+          const isFullTime = (t.role === '專任教師');
+          
+          t.isQualifiedStep2 = Boolean(t.isQualifiedStep1 && inRosterOk && isProxyOrFormal && isFullTime);
         });
       });
 
       renderStep3Tabs();
       renderStep3Table();
       switchStep(3);
-      showToast('已進入第 2 步【排除行政主管與導師】！', 'info');
+      showToast('已進入第 2 步【只採計長期代理和專任】！未在名冊者已排除。', 'info');
     }
 
     function renderStep3Tabs() {
@@ -1512,7 +1613,7 @@
       if (!teacher) return;
       teacher.isQualifiedStep2 = !teacher.isQualifiedStep2;
       renderStep3Table();
-      showToast(`已切換 ${teacher.name} 資格為：${teacher.isQualifiedStep2 ? '【合格排代導】' : '【排除不排】'}`);
+      showToast(`已切換 ${teacher.name} 狀態為：${teacher.isQualifiedStep2 ? '【採計排代導】' : '【不採計】'}`);
     }
 
     function renderStep3Table() {
@@ -1520,18 +1621,25 @@
       if (!tbody) return;
       const currentClass = schoolClasses.find(c => c.className === selectedClassId);
       if (!currentClass || !currentClass.teachers) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">查無此班級資料。</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400">查無此班級資料。</td></tr>`;
         return;
       }
 
       tbody.innerHTML = currentClass.teachers.map((t, idx) => {
         let reasonLabel = '';
         if (!t.isQualifiedStep2) {
-          if (t.role.includes('校長') || t.role.includes('主管')) reasonLabel = '校長/行政主管排除';
-          else if (t.role === '導師') reasonLabel = '導師身分排除';
+          if (t.inRoster === false) reasonLabel = '未列於教師名冊 (不採計)';
+          else if (t.role.includes('校長') || t.role.includes('主管')) reasonLabel = '行政主管排除 (非專任)';
+          else if (t.role === '導師') reasonLabel = '導師身分排除 (非專任)';
+          else if (t.role !== '專任教師') reasonLabel = `非專任職務 (${t.role})`;
+          else if (t.type !== '長期代理' && t.type !== '正式教師') reasonLabel = `非長代/正式 (${t.type})`;
           else if (!t.isQualifiedStep1) reasonLabel = '無任課該班排除';
-          else reasonLabel = '身分別不符';
+          else reasonLabel = '不符採計條件';
         }
+
+        const rosterBadge = t.inRoster !== false
+          ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ 在名冊內</span>'
+          : '<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">✗ 未在名冊</span>';
 
         return `
           <tr class="hover:bg-slate-50 transition ${!t.isQualifiedStep2 ? 'bg-slate-50/70 text-slate-400' : ''}">
@@ -1542,6 +1650,7 @@
               ${t.role === '導師' ? '<span class="ml-1 text-[10px] bg-amber-100 text-amber-800 px-1 py-0.5 rounded font-bold">導師</span>' : ''}
             </td>
             <td class="p-3 text-slate-700">${t.subject}</td>
+            <td class="p-3">${rosterBadge}</td>
             <td class="p-3">
               <span class="px-2 py-0.5 rounded text-[11px] font-bold ${t.type === '長期代理' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-700'}">
                 ${t.type === '長期代理' ? '長期代理 (長代)' : t.type}
@@ -1550,12 +1659,12 @@
             <td class="p-3 text-slate-600">${t.role}</td>
             <td class="p-3">
               ${t.isQualifiedStep2
-                ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${t.type === '長期代理' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-800'}">✓ 合格排代導 (${t.type === '長期代理' ? '長代優先' : '正式'})</span>`
-                : `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">✗ 排除 (${reasonLabel})</span>`}
+                ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${t.type === '長期代理' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-800'}">✓ 採計 (${t.type === '長期代理' ? '長代優先' : '專任正式'})</span>`
+                : `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">✗ 不採計 (${reasonLabel})</span>`}
             </td>
             <td class="p-3 text-center">
               <button onclick="toggleStep3Teacher('${t.id}')" class="px-2.5 py-1 rounded text-xs font-bold ${t.isQualifiedStep2 ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">
-                ${t.isQualifiedStep2 ? '改為排除' : '改為合格'}
+                ${t.isQualifiedStep2 ? '改為不採計' : '改為採計'}
               </button>
             </td>
           </tr>
