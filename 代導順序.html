@@ -661,7 +661,7 @@
 
     function normalizeTeacherType(val = '', roleVal = '') {
       const s = (String(val) + ' ' + String(roleVal)).trim();
-      if (/長代|代理|三代|代課|長期代理|實缺|懸缺|編制外/.test(s)) return '長期代理';
+      if (/長代|代理|三代|代課|長期代理|實缺|懸缺|編制外|定期契約/.test(s)) return '長期代理';
       if (/兼課|鐘點|短代/.test(s)) return '兼課/鐘點';
       if (/正式/.test(s)) return '正式教師';
       return '正式教師';
@@ -670,7 +670,7 @@
     function normalizeTeacherRole(val = '') {
       const s = String(val).trim();
       if (/校長/.test(s)) return '校長/兼行政主管';
-      if (/主任|組長|主管|主計|人事|行政|幹事|護理/.test(s)) return '校長/兼行政主管';
+      if (/主任|組長|主管|主計|人事|行政|幹事|護理|秘書/.test(s)) return '校長/兼行政主管';
       if (/導師|班導/.test(s) || /^[789一二三七八九]\d{2}$/.test(s) || /^\d{3}$/.test(s) || /^[789]\d{2}班?$/.test(s)) return '導師';
       if (/專任/.test(s)) return '專任教師';
       return '專任教師';
@@ -684,7 +684,7 @@
       if (/^[789一二三七八九]\d{0,2}班?$/.test(s)) return false;
       if (/^[1-9]年\d{1,2}班?$/.test(s)) return false;
       if (/^[國七八九][一二三四五六七八九]/.test(s) && /班$/.test(s)) return false;
-      if (/^(班級|年級|座號|序號|編號|代碼|科目|節數|每週節數|合計|總計|平均|備註|任課|教師|姓名|職稱|聘別|星期|時間|教室|未排|早修|午休|導師時間|彈性|社團|兼課|鐘點|課程|無|空白|代理導師序位表|班級順位)$/i.test(s)) return false;
+      if (/^(班級|年級|座號|序號|編號|代碼|科目|節數|每週節數|合計|總計|平均|備註|任課|教師|姓名|職稱|聘別|星期|時間|教室|未排|早修|午休|導師時間|彈性|社團|兼課|鐘點|課程|無|空白|代理導師序位表|班級順位|身分|現任職務|教職員|教職員工|簽到|簽退)$/i.test(s)) return false;
       if (s.length < 2 || s.length > 12) return false;
       return true;
     }
@@ -692,20 +692,44 @@
     function cleanTeacherName(val) {
       if (!val) return '';
       return String(val)
-        .replace(/[\(（].*?[\)）]/g, '')
-        .replace(/[\*\×\+]\d+/g, '')
-        .replace(/[\s\u00A0\u3000\u200B\uFEFF]/g, '')
+        .replace(/[\(（\[【].*?[\)）\]】]/g, '') // 移除 (兼), (代), [長代] 等括弧標記
+        .replace(/[\*\×\+\#\★\※\▲\▼\●\○\?？\^\/\\]/g, '') // 移除前綴或後綴符號 (*, # 等)
+        .replace(/\d+/g, '') // 移除殘留數字 (避免 701 等班號被當名字)
+        .replace(/[\s\u00A0\u3000\u200B\uFEFF]/g, '') // 徹底移除所有半形、全形空白與隱藏字元
         .trim();
     }
 
     function detectCategory(subjectName = '') {
-      const s = subjectName.trim();
+      const s = String(subjectName || '').trim();
       if (!s) return '藝能科';
-      if (/國|國文|國語|閱讀|寫作/.test(s)) return '國文';
-      if (/英|英語|外語|雙語/.test(s)) return '英文';
-      if (/數|數學|幾何|代數/.test(s)) return '數學';
-      if (/社|歷史|地理|公民|社會探究|台灣史/.test(s)) return '社會';
-      if (/理|化|理化|生物|物理|化學|地科|自然|科學|生科/.test(s)) return '自然';
+
+      // 1. 國文：國文
+      if (/^國文$/.test(s) || /國語|國文/.test(s)) {
+        return '國文';
+      }
+
+      // 2. 英文：英文
+      if (/^英文$/.test(s) || /英語|英文/.test(s)) {
+        return '英文';
+      }
+
+      // 3. 數學：數學
+      if (/^數學$/.test(s) || /數學/.test(s)) {
+        return '數學';
+      }
+
+      // 4. 社會：歷史、地理、公民
+      if (/歷史|地理|公民/.test(s)) {
+        return '社會';
+      }
+
+      // 5. 自然：自然、地球科學 (以及理化、物理、化學)
+      if (/地球科學|地科|自然|理化|物理|化學/.test(s)) {
+        return '自然';
+      }
+
+      // 6. 藝能科：健康教育、體育、美術、音樂、表演、輔導活動、童軍、家政、資訊科技、生活科技、閱讀、本土語等
+      // 其餘皆歸入藝能科
       return '藝能科';
     }
 
@@ -813,21 +837,34 @@
       let subjectCols = [];
       let classColIdx = -1;
 
+      // 包含所有科目關鍵字（涵蓋 表演、表藝、閱讀、本土語、健教等）
+      const knownSubjectRegex = /(國文|國語|英語|英文|數學|理化|生物|物理|化學|地科|地球科學|歷史|地理|公民|社會|自然|健康教育|健教|健體|健康|體育|美術|視覺|美勞|音樂|表演|表藝|輔導|童軍|家政|資訊|生活科技|生科|科技|閱讀|本土|閩南|客語|手語|導師)/i;
+
       for (let r = 0; r < Math.min(rows.length, 15); r++) {
         const row = rows[r];
         if (!Array.isArray(row)) continue;
-        let foundSubjects = [];
+        let matchCount = 0;
+        let cCol = -1;
         row.forEach((cell, idx) => {
           const val = String(cell || '').trim();
-          if (/(國文|國語|英語|英文|數學|理化|生物|物理|化學|歷史|地理|公民|社會|自然|體育|音樂|視覺|美勞|美術|家政|童軍|資訊|科技|健體|健康|輔導|導師)/.test(val)) {
-            foundSubjects.push({ colIdx: idx, subjectName: val });
-          }
-          if (/班級|班號|年班/.test(val) && classColIdx === -1) classColIdx = idx;
+          if (knownSubjectRegex.test(val)) matchCount++;
+          if (/班級|班號|年班/.test(val) && cCol === -1) cCol = idx;
         });
 
-        if (foundSubjects.length >= 3) {
+        // 只要辨識出 3 個以上科目欄位，即判定為配課表表頭列
+        if (matchCount >= 3) {
           matrixHeaderRow = r;
-          subjectCols = foundSubjects;
+          classColIdx = cCol !== -1 ? cCol : 0;
+
+          // 廣納表頭列中所有科目欄位（包含表演、閱讀、本土語等所有非雜訊欄位）
+          subjectCols = [];
+          row.forEach((cell, idx) => {
+            if (idx === classColIdx) return;
+            const val = String(cell || '').trim();
+            if (!val) return;
+            if (/^(班級|班號|年班|序號|編號|代碼|合計|總計|平均|備註)$/i.test(val)) return;
+            subjectCols.push({ colIdx: idx, subjectName: val });
+          });
           break;
         }
       }
@@ -962,8 +999,8 @@
             }
           });
 
-          document.getElementById('file-seniority-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})：連續專任(${foundSenCol ? '✓' : '—'})，年紀(${foundAgeCol ? '✓' : '—'})</span>`;
-          showToast(`教師年資職稱表載入成功！已更新師資資料庫。`, 'success');
+          document.getElementById('file-seniority-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})：共讀取 ${parsedTotal} 位，連續專任(${foundSenCol ? '✓' : '—'})，年紀(${foundAgeCol ? '✓' : '—'})</span>`;
+          showToast(`教師年資職稱表載入成功！已更新 ${parsedTotal} 位師資年資資料。`, 'success');
         } catch (err) {
           console.error(err);
           showToast('年資職稱表解析失敗！', 'error');
@@ -976,52 +1013,69 @@
       if (!rows || rows.length === 0) return null;
       let nameCol = -1, continuousSenCol = -1, generalSenCol = -1, roleCol = -1, typeCol = -1, ageCol = -1;
       let ageColHeader = '';
-      let headerRowIndex = 0;
+      let bestHeaderRow = -1;
+      let bestScore = -1;
 
-      // 深度掃描前 25 列尋找標題欄位
+      // 智慧表頭評分機制：避免大標題列干擾
       for (let r = 0; r < Math.min(rows.length, 25); r++) {
         const row = rows[r];
         if (!Array.isArray(row)) continue;
-        row.forEach((cell, idx) => {
-          const rawVal = String(cell || '');
-          const val = rawVal.replace(/[\s\u00A0\u3000]/g, '');
-
-          if (/^(?:教師)?姓名$|^教職員$|^名字$/i.test(val) && nameCol === -1) {
-            nameCol = idx;
-            headerRowIndex = r;
-          } else if (/姓名|教職員/i.test(val) && !/班級|代號|科目/.test(val) && nameCol === -1) {
-            nameCol = idx;
-            headerRowIndex = r;
-          }
-
-          // 最高優先權：精確鎖定「連續專任計算」
-          if (/114連續專任|連續專任計算|連續專任|專任連續/i.test(val)) {
-            continuousSenCol = idx;
-          } else if (/服務年資|學校年資|本校年資|任職年資|年資/i.test(val)) {
-            if (generalSenCol === -1) generalSenCol = idx;
-          }
-
-          // 抓取「年紀」、「年齡」、「年次」、「出生年月日」等
-          if (/年[紀齡歲次]|出生|生日|實足|誕/i.test(val) && !/年資|年級|學年/.test(val) && ageCol === -1) {
-            ageCol = idx;
-            ageColHeader = val;
-          }
-
-          if (/職稱|現任職務|職務/i.test(val) && roleCol === -1) roleCol = idx;
-          if (/身分|聘別|類別|代理|長代/i.test(val) && typeCol === -1) typeCol = idx;
+        let score = 0;
+        row.forEach(cell => {
+          const v = String(cell || '').replace(/[\s\u00A0\u3000]/g, '');
+          if (/^(?:教師)?姓名$|^名字$/i.test(v)) score += 20;
+          else if (/姓名/i.test(v) && !/學校|學年|名冊|一覽表/.test(v)) score += 10;
+          if (/114連續專任|連續專任計算|連續專任/i.test(v)) score += 15;
+          if (/年資|年紀|年齡|職稱|聘別/i.test(v)) score += 5;
         });
-
-        if (nameCol !== -1 && (continuousSenCol !== -1 || ageCol !== -1)) {
-          headerRowIndex = r;
-          break;
+        if (score > bestScore) {
+          bestScore = score;
+          bestHeaderRow = r;
         }
       }
 
-      if (nameCol === -1) nameCol = 0;
+      if (bestHeaderRow === -1 || bestScore < 10) bestHeaderRow = 0;
+
+      const headerRow = rows[bestHeaderRow] || [];
+      headerRow.forEach((cell, idx) => {
+        const rawVal = String(cell || '');
+        const val = rawVal.replace(/[\s\u00A0\u3000]/g, '');
+
+        if (/^(?:教師)?姓名$|^名字$/i.test(val) && nameCol === -1) nameCol = idx;
+        else if (/姓名/i.test(val) && !/學校|學年|名冊|班級/.test(val) && nameCol === -1) nameCol = idx;
+
+        if (/114連續專任|連續專任計算|連續專任|專任連續/i.test(val)) continuousSenCol = idx;
+        else if (/服務年資|學校年資|本校年資|任職年資|年資/i.test(val) && generalSenCol === -1) generalSenCol = idx;
+
+        if (/年[紀齡歲]|出生|生日|實足/i.test(val) && !/年資|年級|學年/.test(val) && ageCol === -1) {
+          ageCol = idx;
+          ageColHeader = val;
+        }
+        if (/職稱|現任職務|職務/i.test(val) && roleCol === -1) roleCol = idx;
+        if (/身分|聘別|類別|代理|長代/i.test(val) && typeCol === -1) typeCol = idx;
+      });
+
+      // 備用方案：若無標準「姓名」表頭，搜尋中文人名最密集的欄位
+      if (nameCol === -1) {
+        let maxNameCount = 0;
+        for (let col = 0; col < 10; col++) {
+          let count = 0;
+          for (let r = bestHeaderRow + 1; r < Math.min(rows.length, 30); r++) {
+            const raw = cleanTeacherName(rows[r]?.[col]);
+            if (raw && raw.length >= 2 && raw.length <= 4 && /^[\u4e00-\u9fa5]+$/.test(raw)) count++;
+          }
+          if (count > maxNameCount) {
+            maxNameCount = count;
+            nameCol = col;
+          }
+        }
+        if (nameCol === -1) nameCol = 0;
+      }
+
       const finalSenCol = continuousSenCol !== -1 ? continuousSenCol : (generalSenCol !== -1 ? generalSenCol : -1);
 
       let recordCount = 0;
-      for (let r = headerRowIndex + 1; r < rows.length; r++) {
+      for (let r = bestHeaderRow + 1; r < rows.length; r++) {
         const row = rows[r];
         if (!row) continue;
         const rawName = String(row[nameCol] || '').trim();
@@ -1068,6 +1122,8 @@
           const workbook = XLSX.read(data, { type: 'array', cellDates: true });
           
           let parsedTotal = 0;
+          let proxyTotal = 0;
+          let homeroomTotal = 0;
           let foundAgeCol = false;
 
           workbook.SheetNames.forEach(sheetName => {
@@ -1076,15 +1132,34 @@
             const result = parseRosterTable(json);
             if (result) {
               parsedTotal += result.count || 0;
+              proxyTotal += result.proxyCount || 0;
+              homeroomTotal += result.homeroomCount || 0;
               if (result.foundAge) foundAgeCol = true;
             }
           });
 
-          document.getElementById('file-roster-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})：核對名冊，年紀(${foundAgeCol ? '✓' : '—'})</span>`;
-          showToast(`教職員名冊表載入成功！已更新聘任身分庫。`, 'success');
+          hasUploadedRoster = true;
+          applyGlobalMapToClasses();
+          renderClassesOverview();
+
+          if (parsedTotal > 0) {
+            document.getElementById('file-roster-status').innerHTML = `
+              <span class="text-emerald-600 font-bold">
+                ✓ 已匯入 (${file.name})：成功識別 ${parsedTotal} 位名冊人員（含 ${proxyTotal} 位長代、${homeroomTotal} 位導師）
+              </span>
+            `;
+            showToast(`教職員名冊載入成功！共比對到 ${parsedTotal} 位教職員（含 ${proxyTotal} 位長期代理）。`, 'success');
+          } else {
+            document.getElementById('file-roster-status').innerHTML = `
+              <span class="text-rose-600 font-bold">
+                ⚠️ 未能識別出名冊資料，請檢查檔案格式！
+              </span>
+            `;
+            showToast('未能從檔案中辨識出教職員姓名，請確認表格內容！', 'error');
+          }
         } catch (err) {
           console.error(err);
-          showToast('名冊表解析失敗！', 'error');
+          showToast('名冊表解析失敗，請確認檔案格式！', 'error');
         }
       };
       reader.readAsArrayBuffer(file);
@@ -1092,43 +1167,86 @@
 
     function parseRosterTable(rows) {
       if (!rows || rows.length === 0) return null;
-      let nameCol = -1, typeCol = -1, roleCol = -1, subCol = -1, noteCol = -1, senCol = -1, ageCol = -1;
+      let nameCol = -1, typeCol = -1, roleCol = -1, subCol = -1, noteCol = -1, senCol = -1, ageCol = -1, seqCol = -1;
       let ageColHeader = '';
-      let headerRowIndex = 0;
+      let bestHeaderRow = -1;
+      let bestScore = -1;
 
+      // 智慧評分：精確跳過大標題（例如「臺中市立某某國中115學年度教職員名冊」），鎖定真實欄位標題列
       for (let r = 0; r < Math.min(rows.length, 25); r++) {
         const row = rows[r];
         if (!Array.isArray(row)) continue;
-        row.forEach((cell, idx) => {
-          const rawVal = String(cell || '');
-          const val = rawVal.replace(/[\s\u00A0\u3000]/g, '');
-          if (/^(?:教師)?姓名$|^教職員$|^名字$/i.test(val) && nameCol === -1) {
-            nameCol = idx;
-            headerRowIndex = r;
-          } else if (/姓名|教職員/i.test(val) && !/班級|代號/.test(val) && nameCol === -1) {
-            nameCol = idx;
-            headerRowIndex = r;
-          }
-          if (/身分|聘別|類別|代理|教師身分|任用/i.test(val) && typeCol === -1) typeCol = idx;
-          if (/職稱|現任職務|職務|兼任|兼職/i.test(val) && roleCol === -1) roleCol = idx;
-          if (/科別|科目|領域|專長/i.test(val) && subCol === -1) subCol = idx;
-          if (/114連續專任|連續專任計算|連續專任|專任連續/i.test(val) && senCol === -1) senCol = idx;
-          if (/年[紀齡歲次]|出生|生日|實足|誕/i.test(val) && !/年資|年級|學年/.test(val) && ageCol === -1) {
-            ageCol = idx;
-            ageColHeader = val;
-          }
-          if (/備註|說明/i.test(val) && noteCol === -1) noteCol = idx;
+        let score = 0;
+        row.forEach(cell => {
+          const v = String(cell || '').replace(/[\s\u00A0\u3000]/g, '');
+          if (/^(?:教師)?姓名$|^名字$/i.test(v)) score += 25;
+          else if (/姓名/i.test(v) && !/學校|國中|學年|名冊|一覽表|通訊錄/.test(v)) score += 12;
+          if (/職稱|現任職務|兼任職務|職務/i.test(v)) score += 10;
+          if (/聘別|身分|身分別|類別|任用/i.test(v)) score += 10;
+          if (/科別|科目|領域|任教/i.test(v)) score += 8;
+          if (/114連續專任|連續專任計算|連續專任/i.test(v)) score += 10;
+          if (/年[紀齡歲]|出生|生日/i.test(v)) score += 8;
+          if (/備註|說明/i.test(v)) score += 5;
+          if (/序號|編號|項次|代碼/i.test(v)) score += 5;
         });
-        if (nameCol !== -1 && (typeCol !== -1 || roleCol !== -1 || ageCol !== -1)) break;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestHeaderRow = r;
+        }
       }
 
-      if (nameCol === -1) nameCol = 0;
-      hasUploadedRoster = true;
+      if (bestHeaderRow === -1 || bestScore < 15) bestHeaderRow = 0;
+
+      const headerRow = rows[bestHeaderRow] || [];
+      headerRow.forEach((cell, idx) => {
+        const rawVal = String(cell || '');
+        const val = rawVal.replace(/[\s\u00A0\u3000]/g, '');
+
+        if (/^(?:教師)?姓名$|^名字$/i.test(val) && nameCol === -1) {
+          nameCol = idx;
+        } else if (/姓名/i.test(val) && !/學校|國中|學年|名冊|班級/.test(val) && nameCol === -1) {
+          nameCol = idx;
+        }
+
+        if (/身分|聘別|身分別|類別|代理|教師身分|任用/i.test(val) && typeCol === -1) typeCol = idx;
+        if (/職稱|現任職務|職務|兼任|兼職/i.test(val) && roleCol === -1) roleCol = idx;
+        if (/科別|科目|領域|專長|任教/i.test(val) && subCol === -1) subCol = idx;
+        if (/114連續專任|連續專任計算|連續專任|專任連續/i.test(val) && senCol === -1) senCol = idx;
+        if (/年[紀齡歲次]|出生|生日|實足/i.test(val) && !/年資|年級|學年/.test(val) && ageCol === -1) {
+          ageCol = idx;
+          ageColHeader = val;
+        }
+        if (/備註|說明/i.test(val) && noteCol === -1) noteCol = idx;
+        if (/序號|編號|項次|代號|NO/i.test(val) && seqCol === -1) seqCol = idx;
+      });
+
+      // 備用搜尋：若無明確「姓名」表頭，搜尋中文字人名集中度最高之直欄
+      if (nameCol === -1) {
+        let maxNameCount = 0;
+        for (let col = 0; col < 12; col++) {
+          let count = 0;
+          for (let r = bestHeaderRow + 1; r < Math.min(rows.length, 35); r++) {
+            const cleaned = cleanTeacherName(rows[r]?.[col]);
+            if (cleaned && cleaned.length >= 2 && cleaned.length <= 4 && /^[\u4e00-\u9fa5]+$/.test(cleaned)) {
+              count++;
+            }
+          }
+          if (count > maxNameCount) {
+            maxNameCount = count;
+            nameCol = col;
+          }
+        }
+        if (nameCol === -1) nameCol = 1; // 預設第 2 欄通常為姓名
+      }
 
       let recordCount = 0;
-      for (let r = headerRowIndex + 1; r < rows.length; r++) {
+      let proxyCount = 0;
+      let homeroomCount = 0;
+
+      for (let r = bestHeaderRow + 1; r < rows.length; r++) {
         const row = rows[r];
-        if (!row) continue;
+        if (!row || !Array.isArray(row)) continue;
         const rawName = String(row[nameCol] || '').trim();
         const teacherName = cleanTeacherName(rawName);
         if (!isValidTeacherName(teacherName)) continue;
@@ -1142,27 +1260,53 @@
           ageInfo = parseAgeInfo(row[ageCol], ageColHeader);
         }
 
+        // 1. 全列掃描判斷是否為「導師」（701、702 等純數字班級 或 導師 字眼）
         let isHomeroom = false;
         let homeroomClass = '';
 
-        if (/^[789]\d{2}$/.test(rawRole) || /^\d{3}$/.test(rawRole) || /導師|班導/.test(rawRole)) {
+        if (/^[789一二三七八九]\d{2}$/.test(rawRole) || /^\d{3}$/.test(rawRole) || /導師|班導/.test(rawRole)) {
           isHomeroom = true;
           homeroomClass = rawRole;
         }
 
+        // 深度掃描此列其他非姓名/編號欄位，是否有 701、702 等純數字班號
         row.forEach((cell, idx) => {
-          if (idx === nameCol) return;
+          if (idx === nameCol || idx === seqCol || idx === ageCol || idx === senCol) return;
           const cellVal = String(cell || '').trim();
-          if (/^[789]\d{2}$/.test(cellVal) || /^\d{3}$/.test(cellVal) || /^[789]\d{2}班$/.test(cellVal)) {
+          if (/^[789]\d{2}$/.test(cellVal) || /^[789]\d{2}班$/.test(cellVal) || /^[123]\d{2}$/.test(cellVal)) {
             isHomeroom = true;
             homeroomClass = cellVal;
+          } else if (/導師|班導/.test(cellVal)) {
+            isHomeroom = true;
           }
         });
 
-        const combinedText = `${rawType} ${rawRole} ${rawNote}`;
-        let isProxy = /代理|長代|三代|代課|實缺|懸缺|編制外|定期契約/.test(combinedText);
-        let type = isProxy ? '長期代理' : (normalizeTeacherType(rawType, rawRole));
-        let role = isHomeroom ? '導師' : normalizeTeacherRole(rawRole);
+        if (isHomeroom) homeroomCount++;
+
+        // 2. 全列掃描判斷是否為「長期代理（長代）」
+        // 包含職稱、聘別、備註或整列內容
+        let isProxy = false;
+        const proxyRegex = /(?:長期代理|代理教師|長代|三代|實缺|懸缺|編制外代理|代課教師|定期契約|代理)/;
+        
+        if (proxyRegex.test(rawType) || proxyRegex.test(rawRole) || proxyRegex.test(rawNote)) {
+          isProxy = true;
+        } else {
+          // 檢查整列文字中是否提及代理關鍵字 (避開「代理導師」)
+          const fullRowText = row.filter((c, idx) => idx !== nameCol).map(c => String(c || '')).join(' ');
+          if (proxyRegex.test(fullRowText) && !/代理導師/.test(fullRowText)) {
+            isProxy = true;
+          }
+        }
+
+        if (isProxy) proxyCount++;
+
+        // 3. 判定現任職務與聘任身分
+        const isAdmin = /校長|主任|組長|幹事|護理|主計|人事|行政|秘書/.test(rawRole);
+        let finalRole = '專任教師';
+        if (isAdmin) finalRole = '校長/兼行政主管';
+        else if (isHomeroom) finalRole = '導師';
+
+        let finalType = isProxy ? '長期代理' : (normalizeTeacherType(rawType, rawRole));
 
         let seniority = undefined;
         if (!isProxy && senCol !== -1 && row[senCol] !== undefined && String(row[senCol]).trim() !== '') {
@@ -1174,12 +1318,12 @@
         const existing = globalTeacherMap.get(teacherName) || {};
         globalTeacherMap.set(teacherName, {
           ...existing,
-          type: type,
+          type: finalType,
           fromRoster: true,
           inRoster: true,
           age: (ageInfo && ageInfo.display !== '—') ? ageInfo.display : (existing.age || ''),
           ageNum: (ageInfo && ageInfo.num !== null) ? ageInfo.num : (existing.ageNum ?? null),
-          role: role || existing.role || '專任教師',
+          role: finalRole || existing.role || '專任教師',
           homeroomClass: homeroomClass || existing.homeroomClass || '',
           seniority: isProxy ? '' : (seniority !== undefined ? seniority : existing.seniority),
           defaultSubject: subject || existing.defaultSubject || ''
@@ -1187,27 +1331,30 @@
         recordCount++;
       }
 
-      applyGlobalMapToClasses();
-      renderClassesOverview();
-      return { count: recordCount, foundAge: ageCol !== -1 };
+      return {
+        count: recordCount,
+        proxyCount: proxyCount,
+        homeroomCount: homeroomCount,
+        foundAge: ageCol !== -1
+      };
     }
 
     function applyGlobalMapToClasses() {
       schoolClasses.forEach(c => {
         c.teachers.forEach(t => {
           const g = globalTeacherMap.get(t.name);
-          if (g) {
-            if (g.fromRoster || g.type) t.type = g.type;
+          if (g && (g.fromRoster || g.inRoster)) {
+            t.inRoster = true;
+            if (g.type) t.type = g.type;
             if (t.type === '長期代理') {
               t.seniority = ''; // 代理教師不採計也不顯示年資
-            } else if (g.seniority !== undefined) {
+            } else if (g.seniority !== undefined && g.seniority !== '') {
               t.seniority = g.seniority;
             }
             if (g.age) t.age = g.age;
             if (g.ageNum !== undefined && g.ageNum !== null) t.ageNum = g.ageNum;
             if (g.role) t.role = g.role;
             if (g.homeroomClass) t.homeroomClass = g.homeroomClass;
-            t.inRoster = Boolean(g.fromRoster || g.inRoster);
           } else {
             if (hasUploadedRoster) {
               t.inRoster = false;
