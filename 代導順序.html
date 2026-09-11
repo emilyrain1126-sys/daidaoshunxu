@@ -76,23 +76,19 @@
             <h1 class="text-xl font-bold text-slate-900 tracking-tight">各班獨立排代導輪值系統</h1>
             <span class="px-2 py-0.5 text-[11px] font-bold bg-indigo-100 text-indigo-800 rounded-full">分班獨立排定版</span>
           </div>
-          <p class="text-xs text-slate-500 font-medium">每個班級獨立名冊：只有任課該班才能代該班 ➔ 排除行政與導師 ➔ 長代依國英數社自藝 ➔ 正式依年資(年資同則年紀輕優先)</p>
+          <p class="text-xs text-slate-500 font-medium">每個班級獨立名冊：只有任課該班才能代該班 ➔ 排除行政與導師 ➔ 長代依國英數社自藝 ➔ 正式依連續專任計算</p>
         </div>
       </div>
 
-      <!-- Reset and Quick Load Buttons -->
+      <!-- Reset Button -->
       <div class="flex items-center space-x-2">
-        <button id="load-sample-btn" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition">
-          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-          載入展示示範資料
-        </button>
         <button id="reset-system-btn" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
           重新開始
         </button>
       </div>
     </div>
 
-    <!-- Stepper Navigation Bar -->
+  <!-- Stepper Navigation Bar -->
     <div class="bg-slate-100/80 border-t border-slate-200 overflow-x-auto">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
         <ol class="flex items-center justify-between text-xs font-medium min-w-[760px] gap-2" id="wizard-steps-container">
@@ -139,7 +135,7 @@
       </svg>
       <div class="flex-1">
         <span class="font-bold">分班排代導提示：</span>
-        <span id="banner-text">系統採用「班級獨立模式」，每個班級分開產生專屬輪值名冊。請上傳配課表、年資表與名冊表，或點右上角「載入展示示範資料」。</span>
+        <span id="banner-text">系統採用「班級獨立模式」，每個班級分開產生專屬輪值名冊。請上傳配課表、年資表與名冊表 3 個 Excel 檔案進行排定。</span>
       </div>
     </div>
 
@@ -176,8 +172,8 @@
               <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">檔案 2：年資與職稱表</span>
               <span class="text-xs text-slate-400 font-mono">.xlsx, .xls</span>
             </div>
-            <h3 class="font-bold text-slate-800 text-sm">教師年資積分與職務表</h3>
-            <p class="text-xs text-slate-500 mt-1">用於規則 2 與規則 5：比對現任職務（校長、主任、組長、導師）與正式教師年資及出生日期。</p>
+            <h3 class="font-bold text-slate-800 text-sm">教師年資職稱表</h3>
+            <p class="text-xs text-slate-500 mt-1">用於規則 2 與規則 5：優先採計<span class="text-indigo-600 font-bold">「114連續專任計算」</span>欄位之數值作為連續專任年資，並比對專任職務。</p>
           </div>
           <div class="mt-4 pt-3 border-t border-slate-100">
             <label class="cursor-pointer inline-flex items-center justify-center w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition">
@@ -193,11 +189,11 @@
         <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-indigo-300 transition">
           <div>
             <div class="flex items-center justify-between mb-2">
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">檔案 3：教職員名冊表 (長代主要依據)</span>
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">檔案 3：教職員名冊表 (長代/導師判準)</span>
               <span class="text-xs text-slate-400 font-mono">.xlsx, .xls</span>
             </div>
             <h3 class="font-bold text-slate-800 text-sm">全校教職員名冊表</h3>
-            <p class="text-xs text-slate-500 mt-1">★ <span class="text-indigo-600 font-bold">長代身分以此檔案判定為最優先準則</span>（包含實缺、懸缺、代理教師、長代等聘別身分），判定最精確不易出錯。</p>
+            <p class="text-xs text-slate-500 mt-1">★ <span class="text-indigo-600 font-bold">長代判定最高準則</span>。若職稱或欄位為<span class="text-rose-600 font-bold">「701」、「702」等純數字</span>代表導師，系統自動判定為導師並排除不排。</p>
           </div>
           <div class="mt-4 pt-3 border-t border-slate-100">
             <label class="cursor-pointer inline-flex items-center justify-center w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition">
@@ -225,7 +221,7 @@
         <!-- Class Cards Grid -->
         <div id="classes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
           <div class="col-span-full py-12 text-center text-slate-400 text-xs">
-            目前尚未匯入任何班級資料，請上傳配課表、年資表與名冊表，或點選右上角「載入展示示範資料」。
+            目前尚未匯入任何班級資料，請依序上傳配課表、年資表與名冊表 3 個 Excel 檔案進行排定。
           </div>
         </div>
 
@@ -240,44 +236,45 @@
     </section>
 
     <!-- ============================================================== -->
-    <!-- STEP 2: 規則 1【只有任課該班的老師可以排該班代導】審核關卡 -->
+    <!-- STEP 2: 規則 1【各班任課審核 (只有任課的老師可以被排代導)】 -->
     <!-- ============================================================== -->
     <section id="step-2-content" class="step-panel space-y-6 hidden">
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
           <div>
-            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 mb-1">
-              規則 1 審核：只有任課該班的老師可以排該班代導
+            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 mb-1">
+              規則 1 審核：只有任課的老師可以被排代導
             </div>
-            <h2 class="text-lg font-bold text-slate-800">各班任課資格核對（按班級分開）</h2>
-            <p class="text-xs text-slate-500 mt-0.5">請切換下方班級標籤，核對各班之任課老師名冊。未在該班任課者不得列入該班代導名冊。</p>
+            <h2 class="text-lg font-bold text-slate-800">各班任課教師資格審核</h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+              依據配課表確認每個班級有哪些任課教師。只有在該班有授課事實者才能進入後續排代導。
+            </p>
           </div>
-          <div class="flex items-center space-x-2">
+          <div>
             <span id="step2-class-summary" class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-700 rounded-lg">目前班級：—</span>
           </div>
         </div>
 
         <!-- Class Selector Tabs -->
         <div class="pt-3">
-          <label class="block text-xs font-bold text-slate-600 mb-2">請選擇要審查的班級：</label>
+          <label class="block text-xs font-bold text-slate-600 mb-2">請選擇要審核任課的班級：</label>
           <div id="step2-class-tabs" class="flex flex-wrap gap-2 pb-2">
             <!-- Rendered by JS -->
           </div>
         </div>
 
-        <!-- Table for current active class -->
+        <!-- Table -->
         <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar max-h-[460px] mt-3">
           <table class="w-full text-left text-xs border-collapse">
             <thead class="bg-slate-50 text-slate-600 font-semibold sticky top-0 border-b border-slate-200 z-10">
               <tr>
                 <th class="p-3 w-12 text-center">#</th>
-                <th class="p-3">教師姓名</th>
-                <th class="p-3">在該班任課科目</th>
-                <th class="p-3">任課節數</th>
-                <th class="p-3">教師身分</th>
+                <th class="p-3">姓名</th>
+                <th class="p-3">任課科目</th>
+                <th class="p-3">聘任身分</th>
                 <th class="p-3">現任職務</th>
-                <th class="p-3">規則 1 判定結果</th>
-                <th class="p-3 text-center w-36">手動覆核</th>
+                <th class="p-3">任課狀態</th>
+                <th class="p-3 text-center w-32">手動設定</th>
               </tr>
             </thead>
             <tbody id="step2-tbody" class="divide-y divide-slate-100">
@@ -286,17 +283,13 @@
           </table>
         </div>
 
-        <div class="pt-3 flex justify-end items-center text-xs">
-          <span class="text-slate-400">💡 校長、行政主管與導師將在下一步被正式標註排除。</span>
-        </div>
-
         <!-- Step 2 Navigation -->
         <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-100">
           <button id="btn-back-to-step-1" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
-            ← 回上一步 (檔案匯入)
+            ← 回上一步 (匯入配課)
           </button>
           <button id="btn-goto-step-3" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
-            <span>各班任課審核無誤，進行第 2 步【只採計長期代理和專任】</span>
+            <span>各班任課確認無誤，進行第 2 步【只採計長期代理和專任】</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </button>
         </div>
@@ -400,7 +393,6 @@
                 <th class="p-3">姓名</th>
                 <th class="p-3">科目分類</th>
                 <th class="p-3">任課科目</th>
-                <th class="p-3">年資</th>
                 <th class="p-3">排定說明</th>
                 <th class="p-3 text-center w-36">微調順序</th>
               </tr>
@@ -417,7 +409,7 @@
             ← 回上一步 (身分審核)
           </button>
           <button id="btn-goto-step-5" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
-            <span>各班長代排序確認無誤，進行第 4 步【各班正式年資排序】</span>
+            <span>各班長代排序確認無誤，進行第 4 步【各班正式連續專任計算排序】</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </button>
         </div>
@@ -425,28 +417,28 @@
     </section>
 
     <!-- ============================================================== -->
-    <!-- STEP 5: 規則 5【正式依年資排序，年資相同時年紀輕優先】 -->
+    <!-- STEP 5: 規則 5【專任正式依連續專任計算排序】 -->
     <!-- ============================================================== -->
     <section id="step-5-content" class="step-panel space-y-6 hidden">
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
           <div>
             <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 mb-1">
-              規則 5 審核：正式教師依年資排序（年資相同時年紀輕優先）
+              規則 5 審核：專任正式教師依「連續專任計算」排序
             </div>
-            <h2 class="text-lg font-bold text-slate-800">各班專任正式教師年資排序</h2>
+            <h2 class="text-lg font-bold text-slate-800">各班專任正式教師排序</h2>
             <p class="text-xs text-slate-500 mt-0.5">
-              各班專任正式教師接續在長代之後。依年資排序；<span class="text-indigo-600 font-semibold">當年資完全相同時，系統自動以年紀較輕者優先排列</span>。
+              各班專任正式教師接續在長代之後。依「連續專任計算」數值排序；若數值相同可點選後方「微調」按鈕調整。
             </p>
           </div>
           <div class="flex items-center space-x-3">
             <span id="step5-class-summary" class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-700 rounded-lg">目前班級：—</span>
             <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
               <button id="seniority-asc-btn" class="px-2 py-1 rounded bg-white shadow-sm font-semibold text-indigo-700 border border-slate-200">
-                年資由淺到深 (低至高)
+                連續專任計算 由低至高
               </button>
               <button id="seniority-desc-btn" class="px-2 py-1 rounded text-slate-600 hover:text-slate-900">
-                年資由深到淺 (高至低)
+                連續專任計算 由高至低
               </button>
             </div>
           </div>
@@ -468,9 +460,9 @@
                 <th class="p-3 w-28 text-center">該班正式順位</th>
                 <th class="p-3">姓名</th>
                 <th class="p-3">任課科目</th>
-                <th class="p-3">年資 (年)</th>
-                <th class="p-3">出生年月日 / 年齡</th>
-                <th class="p-3">排定依據與年資比對</th>
+                <th class="p-3">連續專任計算</th>
+                <th class="p-3">年紀</th>
+                <th class="p-3">排定依據說明</th>
                 <th class="p-3 text-center w-36">微調順序</th>
               </tr>
             </thead>
@@ -486,7 +478,7 @@
             ← 回上一步 (代理排序)
           </button>
           <button id="btn-goto-step-6" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
-            <span>年資排序無誤，產生【各班獨立代導總名冊】</span>
+            <span>連續專任計算排序無誤，產生【各班獨立代導總名冊】</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </button>
         </div>
@@ -566,8 +558,8 @@
                     <th class="p-3">教師姓名</th>
                     <th class="p-3">在該班科目</th>
                     <th class="p-3">身分聘別</th>
-                    <th class="p-3">年資</th>
-                    <th class="p-3">出生年次 / 年齡</th>
+                    <th class="p-3">連續專任計算</th>
+                    <th class="p-3">年紀</th>
                     <th class="p-3">排定依據說明</th>
                     <th class="p-3 text-center w-28">順序微調</th>
                   </tr>
@@ -605,61 +597,12 @@
 
       <div class="space-y-3.5 text-xs">
         <div>
-          <label class="block font-medium text-slate-700 mb-1">目標班級</label>
-          <input type="text" id="modal-target-class" class="w-full border border-slate-200 bg-slate-100 rounded-lg p-2 font-bold text-indigo-700" readonly />
+          <label class="block font-medium text-slate-700 mb-1">連續專任計算</label>
+          <input type="number" step="0.5" id="modal-ct-seniority" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" value="1" />
         </div>
-
         <div>
-          <label class="block font-medium text-slate-700 mb-1">教師姓名</label>
-          <input type="text" id="modal-ct-name" placeholder="輸入教師姓名" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-medium text-slate-700 mb-1">在該班任課科目</label>
-            <input type="text" id="modal-ct-subject" placeholder="例如：國文、數學" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-          </div>
-          <div>
-            <label class="block font-medium text-slate-700 mb-1">科目分類</label>
-            <select id="modal-ct-category" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-              <option value="國文">國文</option>
-              <option value="英文">英文</option>
-              <option value="數學">數學</option>
-              <option value="社會">社會</option>
-              <option value="自然">自然</option>
-              <option value="藝能科">藝能科</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-medium text-slate-700 mb-1">教師身分</label>
-            <select id="modal-ct-type" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-              <option value="長期代理">長期代理 (長代)</option>
-              <option value="正式教師">正式教師</option>
-              <option value="兼課/鐘點">兼課/鐘點(不排)</option>
-            </select>
-          </div>
-          <div>
-            <label class="block font-medium text-slate-700 mb-1">現任職務</label>
-            <select id="modal-ct-role" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
-              <option value="專任教師">專任教師</option>
-              <option value="導師">導師 (排除)</option>
-              <option value="校長/兼行政主管">校長 / 兼行政主管 (排除)</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="block font-medium text-slate-700 mb-1">年資 (年)</label>
-            <input type="number" step="0.5" id="modal-ct-seniority" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" value="1" />
-          </div>
-          <div>
-            <label class="block font-medium text-slate-700 mb-1">出生年次 / 年齡</label>
-            <input type="text" id="modal-ct-birth" placeholder="如 82.05.20 或 33歲" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
-          </div>
+          <label class="block font-medium text-slate-700 mb-1">年紀</label>
+          <input type="text" id="modal-ct-age" placeholder="例如：32歲 或 32" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
         </div>
       </div>
 
@@ -693,104 +636,29 @@
     let schoolClasses = [];
     let globalTeacherMap = new Map();
 
-    // 增強型年齡/出生年月日解析器：值越大代表年紀越輕 (出生越晚)
-    function parseYoungnessScore(val) {
-      if (val === null || val === undefined) return 0;
-      if (val instanceof Date && !isNaN(val.getTime())) {
-        return val.getFullYear() * 10000 + (val.getMonth() + 1) * 100 + val.getDate();
+    // 直接解析實際年紀（檔案中給的即為實際實足年齡，不作年次換算）
+    function parseAgeInfo(val, colHeader = '') {
+      if (val === undefined || val === null || val === '') return { display: '—', num: null };
+
+      // 1. 若為數值（直接代表年紀）
+      if (typeof val === 'number') {
+        return { display: `${val}歲`, num: val };
       }
 
-      const str = String(val).trim();
-      if (!str) return 0;
+      const s = String(val).trim();
+      if (!s || s === '—' || s === '-') return { display: '—', num: null };
 
-      // 純年齡格式：如 "33歲" 或純數字小於 80 (若作為年齡)
-      const ageMatch = str.match(/^(\d{1,2})\s*歲?$/);
-      if (ageMatch && parseInt(ageMatch[1], 10) >= 20 && parseInt(ageMatch[1], 10) <= 75) {
-        const age = parseInt(ageMatch[1], 10);
-        return 2000000 - (age * 10000);
+      // 提取字串中的年齡數字，例如「35歲」或「35」
+      const numMatch = s.match(/^(\d{1,3}(?:\.\d+)?)歲?$/);
+      if (numMatch) {
+        const num = parseFloat(numMatch[1]);
+        return { display: `${num}歲`, num: num };
       }
 
-      // Excel 日期序號 (20000 ~ 55000)
-      if (/^\d{5}$/.test(str)) {
-        const serial = parseInt(str, 10);
-        if (serial >= 15000 && serial <= 60000) {
-          const dt = new Date(Math.round((serial - 25569) * 86400 * 1000));
-          return dt.getFullYear() * 10000 + (dt.getMonth() + 1) * 100 + dt.getDate();
-        }
-      }
-
-      // 7碼或6碼純民國格式 (例如 0730921, 730921)
-      if (/^0?\d{6}$/.test(str)) {
-        const padStr = str.length === 6 ? '0' + str : str;
-        const rocYear = parseInt(padStr.substring(0, 3), 10);
-        const m = parseInt(padStr.substring(3, 5), 10);
-        const d = parseInt(padStr.substring(5, 7), 10);
-        return (rocYear + 1911) * 10000 + m * 100 + d;
-      }
-
-      // 民國格式：如 82.05.20、民國82年、82/5/20、82-05-20
-      const rocMatch = str.match(/(?:民國)?\s*(\d{2,3})[.\-\/年](\d{1,2})?(?:[.\-\/月](\d{1,2}))?/);
-      if (rocMatch) {
-        const rocYear = parseInt(rocMatch[1], 10);
-        if (rocYear < 130) {
-          const m = parseInt(rocMatch[2] || '1', 10);
-          const d = parseInt(rocMatch[3] || '1', 10);
-          return (rocYear + 1911) * 10000 + m * 100 + d;
-        }
-      }
-
-      // 西元格式：1993-05-20, 1993/5/20
-      const ceMatch = str.match(/^(19\d{2}|20\d{2})[.\-\/年](\d{1,2})?(?:[.\-\/月](\d{1,2}))?/);
-      if (ceMatch) {
-        const ceYear = parseInt(ceMatch[1], 10);
-        const m = parseInt(ceMatch[2] || '1', 10);
-        const d = parseInt(ceMatch[3] || '1', 10);
-        return ceYear * 10000 + m * 100 + d;
-      }
-
-      const numOnly = parseInt(str, 10);
-      if (!isNaN(numOnly)) {
-        if (numOnly >= 20 && numOnly <= 110) {
-          return (numOnly + 1911) * 10000;
-        } else if (numOnly > 1900 && numOnly < 2050) {
-          return numOnly * 10000;
-        }
-      }
-      return 0;
+      const anyNum = parseFloat(s);
+      return !isNaN(anyNum) ? { display: `${anyNum}歲`, num: anyNum } : { display: s, num: null };
     }
 
-    // 格式化為友善顯示的出生日期/年齡
-    function formatBirthDisplay(val) {
-      if (!val && val !== 0) return '';
-      if (val instanceof Date && !isNaN(val.getTime())) {
-        const roc = val.getFullYear() - 1911;
-        const m = String(val.getMonth() + 1).padStart(2, '0');
-        const d = String(val.getDate()).padStart(2, '0');
-        const age = new Date().getFullYear() - val.getFullYear();
-        return `${roc}.${m}.${d} (${age}歲)`;
-      }
-
-      const str = String(val).trim();
-      if (!str) return '';
-
-      // 檢查是否已包含歲
-      if (str.includes('歲')) return str;
-
-      const score = parseYoungnessScore(str);
-      if (score > 19000000) {
-        const ceYear = Math.floor(score / 10000);
-        const m = String(Math.floor((score % 10000) / 100)).padStart(2, '0');
-        const d = String(score % 100).padStart(2, '0');
-        const roc = ceYear - 1911;
-        const currentYear = new Date().getFullYear();
-        const age = currentYear - ceYear;
-        return `${roc}.${m}.${d} (${age}歲)`;
-      }
-
-      return str;
-    }
-
-    // 增強型身分別偵測：全面涵蓋「代理、長代、實缺、懸缺、三代」
     function normalizeTeacherType(val = '', roleVal = '') {
       const s = (String(val) + ' ' + String(roleVal)).trim();
       if (/長代|代理|三代|代課|長期代理|實缺|懸缺|編制外/.test(s)) return '長期代理';
@@ -803,7 +671,7 @@
       const s = String(val).trim();
       if (/校長/.test(s)) return '校長/兼行政主管';
       if (/主任|組長|主管|主計|人事|行政|幹事|護理/.test(s)) return '校長/兼行政主管';
-      if (/導師|班導/.test(s)) return '導師';
+      if (/導師|班導/.test(s) || /^[789一二三七八九]\d{2}$/.test(s) || /^\d{3}$/.test(s) || /^[789]\d{2}班?$/.test(s)) return '導師';
       if (/專任/.test(s)) return '專任教師';
       return '專任教師';
     }
@@ -826,6 +694,7 @@
       return String(val)
         .replace(/[\(（].*?[\)）]/g, '')
         .replace(/[\*\×\+]\d+/g, '')
+        .replace(/[\s\u00A0\u3000\u200B\uFEFF]/g, '')
         .trim();
     }
 
@@ -888,179 +757,15 @@
 
       const bannerText = document.getElementById('banner-text');
       const hints = {
-        1: '步驟 1：匯入配課表、年資表與名冊表。系統已自動整合全校各班師資清單。',
+        1: '步驟 1：匯入配課表、年資表與名冊表。系統已依據實際檔案整合全校各班師資清單。',
         2: '步驟 2 (規則 1)：各班任課審核。只有在該班有任課者才能排該班代導。',
         3: '步驟 3 (規則 2)：只採計長期代理和專任教師，若未列於教師名冊則不予採計。',
         4: '步驟 4 (規則 3 & 4)：各班長期代理教師科別排序。依「國英數社自藝」順位排列。',
-        5: '步驟 5 (規則 5)：各班專任正式教師年資排序。依年資排序；年資相同時年紀輕者優先。',
+        5: '步驟 5 (規則 5)：各班專任正式教師依「連續專任計算」排序，數值相同者依年紀輕者優先。',
         6: '步驟 6：全校序位總表已完成！完全依據指定二列格式呈現，長代老師標以鮮明黃底。'
       };
       if (bannerText) bannerText.textContent = hints[targetStep] || '';
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function loadSampleData() {
-      hasUploadedRoster = true;
-      // 示範資料：完全對照截圖中的班級與教師姓名呈現，並加入「未在名冊」之示範
-      schoolClasses = [
-        {
-          className: '701',
-          classTeacher: '洪淑芬',
-          teachers: [
-            { id: 'c1_t1', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t2', name: '孔祥泰', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 2.0, birth: '85.10.12 (30歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t3', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t4', name: '陳嬿竹', subject: '歷史', category: '社會', type: '正式教師', role: '專任教師', seniority: 5.0, birth: '80.01.20 (35歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t5', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t6', name: '胡鈺敏', subject: '視覺藝術', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 7.0, birth: '77.08.05 (38歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t7', name: '王貞婷', subject: '生物', category: '自然', type: '正式教師', role: '專任教師', seniority: 8.0, birth: '76.11.23 (39歲)', hours: 3, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t8', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t9', name: '劉育如', subject: '童軍', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t10', name: '鄭佳妍', subject: '健體', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 12.0, birth: '71.12.30 (44歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t11', name: '江校外', subject: '社團彈性', category: '藝能科', type: '兼課/鐘點', role: '兼課教師', seniority: 0, birth: '', hours: 1, hasTeaching: true, inRoster: false, isQualifiedStep1: true, isQualifiedStep2: false }
-          ]
-        },
-        {
-          className: '702',
-          classTeacher: '曾志明',
-          teachers: [
-            { id: 'c2_t1', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t2', name: '黃泳淳', subject: '英語', category: '英文', type: '長期代理', role: '專任教師', seniority: 2.0, birth: '86.09.28 (29歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t3', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t4', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t5', name: '李柏勳', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 4.0, birth: '81.08.14 (34歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t6', name: '胡鈺敏', subject: '美勞', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 7.0, birth: '77.08.05 (38歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t7', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t8', name: '魏雅苓', subject: '理化', category: '自然', type: '正式教師', role: '專任教師', seniority: 9.5, birth: '73.02.26 (42歲)', hours: 3, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t9', name: '劉育如', subject: '體育', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true }
-          ]
-        },
-        {
-          className: '703',
-          classTeacher: '張秋蘭',
-          teachers: [
-            { id: 'c3_t1', name: '施盈安', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '88.05.10 (27歲)', hours: 5, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t2', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t3', name: '李昭玲', subject: '英語', category: '英文', type: '長期代理', role: '專任教師', seniority: 2.0, birth: '86.11.03 (29歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t4', name: '陳天宇', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '85.02.14 (30歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t5', name: '許家家', subject: '社會', category: '社會', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '83.06.18 (32歲)', hours: 3, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t6', name: '孔祥泰', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 2.0, birth: '85.10.12 (30歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t7', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t8', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t9', name: '陳嬿竹', subject: '歷史', category: '社會', type: '正式教師', role: '專任教師', seniority: 5.0, birth: '80.01.20 (35歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t10', name: '胡鈺敏', subject: '美術', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 7.0, birth: '77.08.05 (38歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t11', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t12', name: '劉育如', subject: '體育', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true }
-          ]
-        },
-        {
-          className: '704',
-          classTeacher: '黃偉芬',
-          teachers: [
-            { id: 'c4_t1', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t2', name: '孔祥泰', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 2.0, birth: '85.10.12 (30歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t3', name: '李昭玲', subject: '英語', category: '英文', type: '長期代理', role: '專任教師', seniority: 2.0, birth: '86.11.03 (29歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t4', name: '許家家', subject: '社會', category: '社會', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '83.06.18 (32歲)', hours: 3, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t5', name: '陳天宇', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '85.02.14 (30歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t6', name: '黃偉芬', subject: '國文(導師)', category: '國文', type: '正式教師', role: '導師', seniority: 5.0, birth: '80.09.12 (35歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: false },
-            { id: 'c4_t7', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t8', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t9', name: '陳嬿竹', subject: '歷史', category: '社會', type: '正式教師', role: '專任教師', seniority: 5.0, birth: '80.01.20 (35歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t10', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t11', name: '劉育如', subject: '體育', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t12', name: '張淑珍', subject: '家政', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 15.0, birth: '68.03.14 (47歲)', hours: 2, hasTeaching: true, inRoster: true, isQualifiedStep1: true, isQualifiedStep2: true }
-          ]
-        }
-      ];
-
-      selectedClassId = schoolClasses[0].className;
-      renderClassesOverview();
-      document.getElementById('file-schedule-status').innerHTML = '<span class="text-emerald-600 font-semibold">✓ 示範檔 1 (配課表) 已載入 4 個班級</span>';
-      document.getElementById('file-seniority-status').innerHTML = '<span class="text-emerald-600 font-semibold">✓ 示範檔 2 (年資表) 已就緒</span>';
-      document.getElementById('file-roster-status').innerHTML = '<span class="text-emerald-600 font-semibold">✓ 示範檔 3 (名冊表) 已就緒 (已連線名冊核對)</span>';
-      document.getElementById('btn-goto-step-2').removeAttribute('disabled');
-      showToast('已載入示範資料！第 2 步將只採計長期代理和專任，未在名冊者不採計。', 'success');
-    }
-
-    function loadSampleData() {
-      // 示範資料：完全對照截圖中的班級與教師姓名呈現
-      schoolClasses = [
-        {
-          className: '701',
-          classTeacher: '洪淑芬',
-          teachers: [
-            { id: 'c1_t1', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t2', name: '孔祥泰', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 2.0, birth: '85.10.12 (30歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t3', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t4', name: '陳嬿竹', subject: '歷史', category: '社會', type: '正式教師', role: '專任教師', seniority: 5.0, birth: '80.01.20 (35歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t5', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t6', name: '胡鈺敏', subject: '視覺藝術', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 7.0, birth: '77.08.05 (38歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t7', name: '王貞婷', subject: '生物', category: '自然', type: '正式教師', role: '專任教師', seniority: 8.0, birth: '76.11.23 (39歲)', hours: 3, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t8', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t9', name: '劉育如', subject: '童軍', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c1_t10', name: '鄭佳妍', subject: '健體', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 12.0, birth: '71.12.30 (44歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true }
-          ]
-        },
-        {
-          className: '702',
-          classTeacher: '曾志明',
-          teachers: [
-            { id: 'c2_t1', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t2', name: '黃泳淳', subject: '英語', category: '英文', type: '長期代理', role: '專任教師', seniority: 2.0, birth: '86.09.28 (29歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t3', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t4', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t5', name: '李柏勳', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 4.0, birth: '81.08.14 (34歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t6', name: '胡鈺敏', subject: '美勞', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 7.0, birth: '77.08.05 (38歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t7', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t8', name: '魏雅苓', subject: '理化', category: '自然', type: '正式教師', role: '專任教師', seniority: 9.5, birth: '73.02.26 (42歲)', hours: 3, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c2_t9', name: '劉育如', subject: '體育', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true }
-          ]
-        },
-        {
-          className: '703',
-          classTeacher: '張秋蘭',
-          teachers: [
-            { id: 'c3_t1', name: '施盈安', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '88.05.10 (27歲)', hours: 5, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t2', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t3', name: '李昭玲', subject: '英語', category: '英文', type: '長期代理', role: '專任教師', seniority: 2.0, birth: '86.11.03 (29歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t4', name: '陳天宇', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '85.02.14 (30歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t5', name: '許家家', subject: '社會', category: '社會', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '83.06.18 (32歲)', hours: 3, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t6', name: '孔祥泰', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 2.0, birth: '85.10.12 (30歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t7', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t8', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t9', name: '陳嬿竹', subject: '歷史', category: '社會', type: '正式教師', role: '專任教師', seniority: 5.0, birth: '80.01.20 (35歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t10', name: '胡鈺敏', subject: '美術', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 7.0, birth: '77.08.05 (38歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t11', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c3_t12', name: '劉育如', subject: '體育', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true }
-          ]
-        },
-        {
-          className: '704',
-          classTeacher: '黃偉芬',
-          teachers: [
-            { id: 'c4_t1', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t2', name: '孔祥泰', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 2.0, birth: '85.10.12 (30歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t3', name: '李昭玲', subject: '英語', category: '英文', type: '長期代理', role: '專任教師', seniority: 2.0, birth: '86.11.03 (29歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t4', name: '許家家', subject: '社會', category: '社會', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '83.06.18 (32歲)', hours: 3, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t5', name: '陳天宇', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '85.02.14 (30歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t6', name: '黃偉芬', subject: '國文(導師)', category: '國文', type: '正式教師', role: '導師', seniority: 5.0, birth: '80.09.12 (35歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: false },
-            { id: 'c4_t7', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t8', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t9', name: '陳嬿竹', subject: '歷史', category: '社會', type: '正式教師', role: '專任教師', seniority: 5.0, birth: '80.01.20 (35歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t10', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t11', name: '劉育如', subject: '體育', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
-            { id: 'c4_t12', name: '張淑珍', subject: '家政', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 15.0, birth: '68.03.14 (47歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true }
-          ]
-        }
-      ];
-
-      selectedClassId = schoolClasses[0].className;
-      renderClassesOverview();
-      document.getElementById('file-schedule-status').innerHTML = '<span class="text-emerald-600 font-semibold">✓ 示範檔 1 (配課表) 已載入 4 個班級</span>';
-      document.getElementById('file-seniority-status').innerHTML = '<span class="text-emerald-600 font-semibold">✓ 示範檔 2 (年資表) 已就緒</span>';
-      document.getElementById('file-roster-status').innerHTML = '<span class="text-emerald-600 font-semibold">✓ 示範檔 3 (名冊表) 已就緒</span>';
-      document.getElementById('btn-goto-step-2').removeAttribute('disabled');
-      showToast('已載入 701～704 示範資料！已包含長代黃底與年資/年齡完整排定。', 'success');
     }
 
     function handleScheduleFile(e) {
@@ -1071,12 +776,28 @@
         try {
           const data = new Uint8Array(evt.target.result);
           const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+          
+          let parsedAny = false;
+          schoolClasses = [];
 
-          parseClassesFromSchedule(json);
-          document.getElementById('file-schedule-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})</span>`;
-          showToast(`配課表解析成功！已擷取各班級師資。`, 'success');
+          workbook.SheetNames.forEach(sheetName => {
+            const sheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            if (json && json.length > 0) {
+              const res = parseClassesFromSchedule(json);
+              if (res) parsedAny = true;
+            }
+          });
+
+          if (schoolClasses.length > 0) {
+            selectedClassId = schoolClasses[0].className;
+            renderClassesOverview();
+            document.getElementById('btn-goto-step-2').removeAttribute('disabled');
+            document.getElementById('file-schedule-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})：共 ${schoolClasses.length} 班</span>`;
+            showToast(`配課表解析成功！已擷取 ${schoolClasses.length} 個班級師資。`, 'success');
+          } else {
+            showToast('未能從配課表中識別出班級，請確認格式！', 'error');
+          }
         } catch (err) {
           console.error(err);
           showToast('配課表解析失敗，請確認檔案格式！', 'error');
@@ -1085,202 +806,14 @@
       reader.readAsArrayBuffer(file);
     }
 
-    function handleSeniorityFile(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function (evt) {
-        try {
-          const data = new Uint8Array(evt.target.result);
-          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-
-          parseSeniorityTable(json);
-          document.getElementById('file-seniority-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})</span>`;
-          showToast(`教師年資職稱表載入成功！已更新全校師資年資庫。`, 'success');
-        } catch (err) {
-          console.error(err);
-          showToast('年資職稱表解析失敗！', 'error');
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function handleRosterExcelFile(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function (evt) {
-        try {
-          const data = new Uint8Array(evt.target.result);
-          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
-          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-          const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
-
-          parseRosterTable(json);
-          document.getElementById('file-roster-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})</span>`;
-          showToast(`教職員名冊表載入成功！已更新聘任身分庫。`, 'success');
-        } catch (err) {
-          console.error(err);
-          showToast('名冊表解析失敗！', 'error');
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    }
-
-    function parseSeniorityTable(rows) {
-      if (!rows || rows.length === 0) return;
-      let nameCol = -1, senCol = -1, roleCol = -1, typeCol = -1, birthCol = -1;
-      let headerRowIndex = 0;
-
-      for (let r = 0; r < Math.min(rows.length, 15); r++) {
-        const row = rows[r];
-        if (!Array.isArray(row)) continue;
-        row.forEach((cell, idx) => {
-          const val = String(cell || '').trim();
-          if (/姓名|教師姓名|教職員|名字/.test(val) && !/班級|代號|科目/.test(val) && nameCol === -1) {
-            nameCol = idx;
-            headerRowIndex = r;
-          }
-          if (/年資|積分|年數|服務年資/.test(val) && senCol === -1) senCol = idx;
-          if (/職稱|現任職務|職務/.test(val) && roleCol === -1) roleCol = idx;
-          if (/身分|聘別|類別|代理|長代/.test(val) && typeCol === -1) typeCol = idx;
-          if (/出生|生日|年齡|出生年|年次|出生日期|出生年月日/.test(val) && birthCol === -1) birthCol = idx;
-        });
-        if (nameCol !== -1 && (senCol !== -1 || birthCol !== -1)) break;
-      }
-
-      if (nameCol === -1) nameCol = 0;
-      if (senCol === -1) senCol = 1;
-
-      for (let r = headerRowIndex + 1; r < rows.length; r++) {
-        const row = rows[r];
-        if (!row) continue;
-        const rawName = String(row[nameCol] || '').trim();
-        const teacherName = cleanTeacherName(rawName);
-        if (!isValidTeacherName(teacherName)) continue;
-
-        const sen = parseFloat(row[senCol]) || 0;
-        const rawRole = roleCol !== -1 ? String(row[roleCol] || '') : '';
-        const rawType = typeCol !== -1 ? String(row[typeCol] || '') : '';
-        const role = normalizeTeacherRole(rawRole);
-        const type = normalizeTeacherType(rawType, rawRole);
-
-        let birth = '';
-        if (birthCol !== -1 && row[birthCol] !== undefined) {
-          birth = formatBirthDisplay(row[birthCol]);
-        }
-
-        const existing = globalTeacherMap.get(teacherName) || {};
-        globalTeacherMap.set(teacherName, {
-          ...existing,
-          seniority: sen !== 0 ? sen : (existing.seniority || 0),
-          role: role || existing.role || '專任教師',
-          type: type === '長期代理' ? '長期代理' : (existing.type || type),
-          birth: birth || existing.birth || ''
-        });
-      }
-
-      applyGlobalMapToClasses();
-      renderClassesOverview();
-    }
-
-    function parseRosterTable(rows) {
-      if (!rows || rows.length === 0) return;
-      let nameCol = -1, typeCol = -1, roleCol = -1, subCol = -1, birthCol = -1, noteCol = -1;
-      let headerRowIndex = 0;
-
-      for (let r = 0; r < Math.min(rows.length, 15); r++) {
-        const row = rows[r];
-        if (!Array.isArray(row)) continue;
-        row.forEach((cell, idx) => {
-          const val = String(cell || '').trim();
-          if (/姓名|教師姓名|教職員/.test(val) && !/班級|代號/.test(val) && nameCol === -1) {
-            nameCol = idx;
-            headerRowIndex = r;
-          }
-          if (/身分|聘別|類別|代理|教師身分|任用/.test(val) && typeCol === -1) typeCol = idx;
-          if (/職稱|現任職務|職務/.test(val) && roleCol === -1) roleCol = idx;
-          if (/科別|科目|領域|專長/.test(val) && subCol === -1) subCol = idx;
-          if (/出生|生日|年齡|出生年|年次|出生日期|出生年月日/.test(val) && birthCol === -1) birthCol = idx;
-          if (/備註|說明/.test(val) && noteCol === -1) noteCol = idx;
-        });
-        if (nameCol !== -1 && (typeCol !== -1 || birthCol !== -1 || roleCol !== -1)) break;
-      }
-
-      if (nameCol === -1) nameCol = 0;
-      hasUploadedRoster = true;
-
-      for (let r = headerRowIndex + 1; r < rows.length; r++) {
-        const row = rows[r];
-        if (!row) continue;
-        const rawName = String(row[nameCol] || '').trim();
-        const teacherName = cleanTeacherName(rawName);
-        if (!isValidTeacherName(teacherName)) continue;
-
-        const rawType = typeCol !== -1 ? String(row[typeCol] || '') : '';
-        const rawRole = roleCol !== -1 ? String(row[roleCol] || '') : '';
-        const rawNote = noteCol !== -1 ? String(row[noteCol] || '') : '';
-        
-        // 長代從教師名冊抓：深度比對聘別、職稱與備註欄位
-        const combinedText = `${rawType} ${rawRole} ${rawNote}`;
-        let isProxy = /代理|長代|三代|代課|實缺|懸缺|編制外|定期契約/.test(combinedText);
-        let type = isProxy ? '長期代理' : (normalizeTeacherType(rawType, rawRole));
-        let role = normalizeTeacherRole(rawRole);
-
-        let birth = '';
-        if (birthCol !== -1 && row[birthCol] !== undefined) {
-          birth = formatBirthDisplay(row[birthCol]);
-        }
-
-        const subject = subCol !== -1 ? String(row[subCol] || '').trim() : '';
-
-        const existing = globalTeacherMap.get(teacherName) || {};
-        globalTeacherMap.set(teacherName, {
-          ...existing,
-          type: type, // 以名冊表為最高權威依據
-          fromRoster: true, // 標記為名冊來源
-          inRoster: true,   // 確定在名冊內
-          role: role || existing.role || '專任教師',
-          birth: birth || existing.birth || '',
-          defaultSubject: subject || existing.defaultSubject || ''
-        });
-      }
-
-      applyGlobalMapToClasses();
-      renderClassesOverview();
-    }
-
-    function applyGlobalMapToClasses() {
-      schoolClasses.forEach(c => {
-        c.teachers.forEach(t => {
-          const g = globalTeacherMap.get(t.name);
-          if (g) {
-            if (g.seniority !== undefined && g.seniority !== 0) t.seniority = g.seniority;
-            // 教師名冊表的身分具有最高優先權
-            if (g.fromRoster || g.type) t.type = g.type;
-            if (g.role) t.role = g.role;
-            if (g.birth) t.birth = g.birth;
-            t.inRoster = Boolean(g.fromRoster || g.inRoster);
-          } else {
-            // 若名冊已匯入但名冊中查無此人
-            if (hasUploadedRoster) {
-              t.inRoster = false;
-            }
-          }
-        });
-      });
-    }
-
     function parseClassesFromSchedule(rows) {
-      if (!rows || rows.length === 0) return;
+      if (!rows || rows.length === 0) return false;
 
       let matrixHeaderRow = -1;
       let subjectCols = [];
       let classColIdx = -1;
 
-      for (let r = 0; r < Math.min(rows.length, 12); r++) {
+      for (let r = 0; r < Math.min(rows.length, 15); r++) {
         const row = rows[r];
         if (!Array.isArray(row)) continue;
         let foundSubjects = [];
@@ -1301,7 +834,6 @@
 
       if (matrixHeaderRow !== -1 && subjectCols.length >= 3) {
         if (classColIdx === -1) classColIdx = 0;
-        const newClasses = [];
 
         for (let r = matrixHeaderRow + 1; r < rows.length; r++) {
           const row = rows[r];
@@ -1309,10 +841,10 @@
           const rawClassName = String(row[classColIdx] || '').trim();
           if (!rawClassName || /^(合計|平均|備註)/.test(rawClassName)) continue;
 
-          let targetClass = newClasses.find(c => c.className === rawClassName);
+          let targetClass = schoolClasses.find(c => c.className === rawClassName);
           if (!targetClass) {
             targetClass = { className: rawClassName, classTeacher: '', teachers: [] };
-            newClasses.push(targetClass);
+            schoolClasses.push(targetClass);
           }
 
           subjectCols.forEach(sc => {
@@ -1337,28 +869,20 @@
                 category: detectCategory(actualSubject),
                 type: g?.type || '正式教師',
                 role: isClassTeacher ? '導師' : (g?.role || '專任教師'),
-                seniority: g?.seniority || 1.0,
-                birth: g?.birth || '',
-                hours: 4,
+                seniority: (g?.type === '長期代理') ? '' : (g?.seniority !== undefined ? g.seniority : ''),
+                age: g?.age || '',
+                ageNum: g?.ageNum ?? null,
                 hasTeaching: true,
                 inRoster: inRoster,
                 isQualifiedStep1: true,
                 isQualifiedStep2: !isClassTeacher && (g?.role !== '校長/兼行政主管') && inRoster
               });
             } else {
-              existingTeacher.hours = (existingTeacher.hours || 0) + 2;
               if (isClassTeacher) existingTeacher.role = '導師';
             }
           });
         }
-
-        if (newClasses.length > 0) {
-          schoolClasses = newClasses;
-          selectedClassId = schoolClasses[0].className;
-          renderClassesOverview();
-          document.getElementById('btn-goto-step-2').removeAttribute('disabled');
-          return;
-        }
+        return true;
       }
 
       // 直式清冊模式
@@ -1375,7 +899,6 @@
       }
 
       if (classCol !== -1 && nameCol !== -1) {
-        const classMap = new Map();
         for (let r = 1; r < rows.length; r++) {
           const row = rows[r];
           if (!row) continue;
@@ -1384,22 +907,25 @@
           if (!cName || !isValidTeacherName(tName)) continue;
 
           const sub = subCol !== -1 ? String(row[subCol] || '一般科目').trim() : '一般科目';
-          if (!classMap.has(cName)) classMap.set(cName, []);
+          let targetClass = schoolClasses.find(c => c.className === cName);
+          if (!targetClass) {
+            targetClass = { className: cName, classTeacher: '', teachers: [] };
+            schoolClasses.push(targetClass);
+          }
 
-          const teachers = classMap.get(cName);
-          if (!teachers.find(t => t.name === tName)) {
+          if (!targetClass.teachers.find(t => t.name === tName)) {
             const g = globalTeacherMap.get(tName);
             const inRoster = g ? Boolean(g.fromRoster || g.inRoster) : (hasUploadedRoster ? false : true);
-            teachers.push({
+            targetClass.teachers.push({
               id: `ct_${cName}_${Math.random().toString(36).substr(2, 6)}`,
               name: tName,
               subject: sub,
               category: detectCategory(sub),
               type: g?.type || '正式教師',
               role: g?.role || '專任教師',
-              seniority: g?.seniority || 1.0,
-              birth: g?.birth || '',
-              hours: 4,
+              seniority: (g?.type === '長期代理') ? '' : (g?.seniority !== undefined ? g.seniority : ''),
+              age: g?.age || '',
+              ageNum: g?.ageNum ?? null,
               hasTeaching: true,
               inRoster: inRoster,
               isQualifiedStep1: true,
@@ -1407,22 +933,288 @@
             });
           }
         }
+        return true;
+      }
+      return false;
+    }
 
-        schoolClasses = [];
-        classMap.forEach((teachers, cName) => {
-          schoolClasses.push({
-            className: cName,
-            classTeacher: '',
-            teachers: teachers
+    function handleSeniorityFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          
+          let parsedTotal = 0;
+          let foundAgeCol = false;
+          let foundSenCol = false;
+
+          workbook.SheetNames.forEach(sheetName => {
+            const sheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            const result = parseSeniorityTable(json);
+            if (result) {
+              parsedTotal += result.count || 0;
+              if (result.foundAge) foundAgeCol = true;
+              if (result.foundSen) foundSenCol = true;
+            }
           });
+
+          document.getElementById('file-seniority-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})：連續專任(${foundSenCol ? '✓' : '—'})，年紀(${foundAgeCol ? '✓' : '—'})</span>`;
+          showToast(`教師年資職稱表載入成功！已更新師資資料庫。`, 'success');
+        } catch (err) {
+          console.error(err);
+          showToast('年資職稱表解析失敗！', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function parseSeniorityTable(rows) {
+      if (!rows || rows.length === 0) return null;
+      let nameCol = -1, continuousSenCol = -1, generalSenCol = -1, roleCol = -1, typeCol = -1, ageCol = -1;
+      let ageColHeader = '';
+      let headerRowIndex = 0;
+
+      // 深度掃描前 25 列尋找標題欄位
+      for (let r = 0; r < Math.min(rows.length, 25); r++) {
+        const row = rows[r];
+        if (!Array.isArray(row)) continue;
+        row.forEach((cell, idx) => {
+          const rawVal = String(cell || '');
+          const val = rawVal.replace(/[\s\u00A0\u3000]/g, '');
+
+          if (/^(?:教師)?姓名$|^教職員$|^名字$/i.test(val) && nameCol === -1) {
+            nameCol = idx;
+            headerRowIndex = r;
+          } else if (/姓名|教職員/i.test(val) && !/班級|代號|科目/.test(val) && nameCol === -1) {
+            nameCol = idx;
+            headerRowIndex = r;
+          }
+
+          // 最高優先權：精確鎖定「連續專任計算」
+          if (/114連續專任|連續專任計算|連續專任|專任連續/i.test(val)) {
+            continuousSenCol = idx;
+          } else if (/服務年資|學校年資|本校年資|任職年資|年資/i.test(val)) {
+            if (generalSenCol === -1) generalSenCol = idx;
+          }
+
+          // 抓取「年紀」、「年齡」、「年次」、「出生年月日」等
+          if (/年[紀齡歲次]|出生|生日|實足|誕/i.test(val) && !/年資|年級|學年/.test(val) && ageCol === -1) {
+            ageCol = idx;
+            ageColHeader = val;
+          }
+
+          if (/職稱|現任職務|職務/i.test(val) && roleCol === -1) roleCol = idx;
+          if (/身分|聘別|類別|代理|長代/i.test(val) && typeCol === -1) typeCol = idx;
         });
 
-        if (schoolClasses.length > 0) {
-          selectedClassId = schoolClasses[0].className;
-          renderClassesOverview();
-          document.getElementById('btn-goto-step-2').removeAttribute('disabled');
+        if (nameCol !== -1 && (continuousSenCol !== -1 || ageCol !== -1)) {
+          headerRowIndex = r;
+          break;
         }
       }
+
+      if (nameCol === -1) nameCol = 0;
+      const finalSenCol = continuousSenCol !== -1 ? continuousSenCol : (generalSenCol !== -1 ? generalSenCol : -1);
+
+      let recordCount = 0;
+      for (let r = headerRowIndex + 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row) continue;
+        const rawName = String(row[nameCol] || '').trim();
+        const teacherName = cleanTeacherName(rawName);
+        if (!isValidTeacherName(teacherName)) continue;
+
+        const hasSenValue = (finalSenCol !== -1 && row[finalSenCol] !== undefined && String(row[finalSenCol]).trim() !== '');
+        const sen = hasSenValue ? (parseFloat(row[finalSenCol]) || 0) : undefined;
+        
+        let ageInfo = null;
+        if (ageCol !== -1 && row[ageCol] !== undefined && String(row[ageCol]).trim() !== '') {
+          ageInfo = parseAgeInfo(row[ageCol], ageColHeader);
+        }
+
+        const rawRole = roleCol !== -1 ? String(row[roleCol] || '') : '';
+        const rawType = typeCol !== -1 ? String(row[typeCol] || '') : '';
+        const role = rawRole ? normalizeTeacherRole(rawRole) : undefined;
+        const type = rawType ? normalizeTeacherType(rawType, rawRole) : undefined;
+
+        const existing = globalTeacherMap.get(teacherName) || {};
+        globalTeacherMap.set(teacherName, {
+          ...existing,
+          seniority: (type === '長期代理' || existing.type === '長期代理') ? '' : (sen !== undefined ? sen : existing.seniority),
+          age: (ageInfo && ageInfo.display !== '—') ? ageInfo.display : (existing.age || ''),
+          ageNum: (ageInfo && ageInfo.num !== null) ? ageInfo.num : (existing.ageNum ?? null),
+          role: role || existing.role || '專任教師',
+          type: type === '長期代理' ? '長期代理' : (existing.type || type || '正式教師')
+        });
+        recordCount++;
+      }
+
+      applyGlobalMapToClasses();
+      renderClassesOverview();
+      return { count: recordCount, foundAge: ageCol !== -1, foundSen: continuousSenCol !== -1 };
+    }
+
+    function handleRosterExcelFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          
+          let parsedTotal = 0;
+          let foundAgeCol = false;
+
+          workbook.SheetNames.forEach(sheetName => {
+            const sheet = workbook.Sheets[sheetName];
+            const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+            const result = parseRosterTable(json);
+            if (result) {
+              parsedTotal += result.count || 0;
+              if (result.foundAge) foundAgeCol = true;
+            }
+          });
+
+          document.getElementById('file-roster-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})：核對名冊，年紀(${foundAgeCol ? '✓' : '—'})</span>`;
+          showToast(`教職員名冊表載入成功！已更新聘任身分庫。`, 'success');
+        } catch (err) {
+          console.error(err);
+          showToast('名冊表解析失敗！', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function parseRosterTable(rows) {
+      if (!rows || rows.length === 0) return null;
+      let nameCol = -1, typeCol = -1, roleCol = -1, subCol = -1, noteCol = -1, senCol = -1, ageCol = -1;
+      let ageColHeader = '';
+      let headerRowIndex = 0;
+
+      for (let r = 0; r < Math.min(rows.length, 25); r++) {
+        const row = rows[r];
+        if (!Array.isArray(row)) continue;
+        row.forEach((cell, idx) => {
+          const rawVal = String(cell || '');
+          const val = rawVal.replace(/[\s\u00A0\u3000]/g, '');
+          if (/^(?:教師)?姓名$|^教職員$|^名字$/i.test(val) && nameCol === -1) {
+            nameCol = idx;
+            headerRowIndex = r;
+          } else if (/姓名|教職員/i.test(val) && !/班級|代號/.test(val) && nameCol === -1) {
+            nameCol = idx;
+            headerRowIndex = r;
+          }
+          if (/身分|聘別|類別|代理|教師身分|任用/i.test(val) && typeCol === -1) typeCol = idx;
+          if (/職稱|現任職務|職務|兼任|兼職/i.test(val) && roleCol === -1) roleCol = idx;
+          if (/科別|科目|領域|專長/i.test(val) && subCol === -1) subCol = idx;
+          if (/114連續專任|連續專任計算|連續專任|專任連續/i.test(val) && senCol === -1) senCol = idx;
+          if (/年[紀齡歲次]|出生|生日|實足|誕/i.test(val) && !/年資|年級|學年/.test(val) && ageCol === -1) {
+            ageCol = idx;
+            ageColHeader = val;
+          }
+          if (/備註|說明/i.test(val) && noteCol === -1) noteCol = idx;
+        });
+        if (nameCol !== -1 && (typeCol !== -1 || roleCol !== -1 || ageCol !== -1)) break;
+      }
+
+      if (nameCol === -1) nameCol = 0;
+      hasUploadedRoster = true;
+
+      let recordCount = 0;
+      for (let r = headerRowIndex + 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row) continue;
+        const rawName = String(row[nameCol] || '').trim();
+        const teacherName = cleanTeacherName(rawName);
+        if (!isValidTeacherName(teacherName)) continue;
+
+        const rawType = typeCol !== -1 ? String(row[typeCol] || '') : '';
+        const rawRole = roleCol !== -1 ? String(row[roleCol] || '') : '';
+        const rawNote = noteCol !== -1 ? String(row[noteCol] || '') : '';
+        
+        let ageInfo = null;
+        if (ageCol !== -1 && row[ageCol] !== undefined && String(row[ageCol]).trim() !== '') {
+          ageInfo = parseAgeInfo(row[ageCol], ageColHeader);
+        }
+
+        let isHomeroom = false;
+        let homeroomClass = '';
+
+        if (/^[789]\d{2}$/.test(rawRole) || /^\d{3}$/.test(rawRole) || /導師|班導/.test(rawRole)) {
+          isHomeroom = true;
+          homeroomClass = rawRole;
+        }
+
+        row.forEach((cell, idx) => {
+          if (idx === nameCol) return;
+          const cellVal = String(cell || '').trim();
+          if (/^[789]\d{2}$/.test(cellVal) || /^\d{3}$/.test(cellVal) || /^[789]\d{2}班$/.test(cellVal)) {
+            isHomeroom = true;
+            homeroomClass = cellVal;
+          }
+        });
+
+        const combinedText = `${rawType} ${rawRole} ${rawNote}`;
+        let isProxy = /代理|長代|三代|代課|實缺|懸缺|編制外|定期契約/.test(combinedText);
+        let type = isProxy ? '長期代理' : (normalizeTeacherType(rawType, rawRole));
+        let role = isHomeroom ? '導師' : normalizeTeacherRole(rawRole);
+
+        let seniority = undefined;
+        if (!isProxy && senCol !== -1 && row[senCol] !== undefined && String(row[senCol]).trim() !== '') {
+          seniority = parseFloat(row[senCol]) || 0;
+        }
+
+        const subject = subCol !== -1 ? String(row[subCol] || '').trim() : '';
+
+        const existing = globalTeacherMap.get(teacherName) || {};
+        globalTeacherMap.set(teacherName, {
+          ...existing,
+          type: type,
+          fromRoster: true,
+          inRoster: true,
+          age: (ageInfo && ageInfo.display !== '—') ? ageInfo.display : (existing.age || ''),
+          ageNum: (ageInfo && ageInfo.num !== null) ? ageInfo.num : (existing.ageNum ?? null),
+          role: role || existing.role || '專任教師',
+          homeroomClass: homeroomClass || existing.homeroomClass || '',
+          seniority: isProxy ? '' : (seniority !== undefined ? seniority : existing.seniority),
+          defaultSubject: subject || existing.defaultSubject || ''
+        });
+        recordCount++;
+      }
+
+      applyGlobalMapToClasses();
+      renderClassesOverview();
+      return { count: recordCount, foundAge: ageCol !== -1 };
+    }
+
+    function applyGlobalMapToClasses() {
+      schoolClasses.forEach(c => {
+        c.teachers.forEach(t => {
+          const g = globalTeacherMap.get(t.name);
+          if (g) {
+            if (g.fromRoster || g.type) t.type = g.type;
+            if (t.type === '長期代理') {
+              t.seniority = ''; // 代理教師不採計也不顯示年資
+            } else if (g.seniority !== undefined) {
+              t.seniority = g.seniority;
+            }
+            if (g.age) t.age = g.age;
+            if (g.ageNum !== undefined && g.ageNum !== null) t.ageNum = g.ageNum;
+            if (g.role) t.role = g.role;
+            if (g.homeroomClass) t.homeroomClass = g.homeroomClass;
+            t.inRoster = Boolean(g.fromRoster || g.inRoster);
+          } else {
+            if (hasUploadedRoster) {
+              t.inRoster = false;
+            }
+          }
+        });
+      });
     }
 
     function renderClassesOverview() {
@@ -1437,7 +1229,7 @@
       if (schoolClasses.length === 0) {
         container.innerHTML = `
           <div class="col-span-full py-12 text-center text-slate-400 text-xs">
-            目前尚未匯入任何班級資料，請上傳配課表、年資表與名冊表，或點選右上角「載入展示示範資料」。
+            目前尚未匯入任何班級資料，請依序上傳配課表、年資表與名冊表 3 個 Excel 檔案進行排定。
           </div>
         `;
         nextBtn.setAttribute('disabled', 'true');
@@ -1537,7 +1329,7 @@
       if (!tbody) return;
       const currentClass = schoolClasses.find(c => c.className === selectedClassId);
       if (!currentClass || !currentClass.teachers) {
-        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400">查無此班級資料。</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">查無此班級資料。</td></tr>`;
         return;
       }
 
@@ -1550,7 +1342,6 @@
             ${t.role === '導師' ? '<span class="ml-1 text-[10px] bg-amber-100 text-amber-800 px-1 py-0.5 rounded font-bold">導師</span>' : ''}
           </td>
           <td class="p-3 text-slate-700 font-medium">${t.subject}</td>
-          <td class="p-3 text-slate-600">${t.hours || 0} 節</td>
           <td class="p-3">
             <span class="px-2 py-0.5 rounded text-[11px] font-bold ${t.type === '長期代理' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-700'}">
               ${t.type === '長期代理' ? '長期代理 (長代)' : t.type}
@@ -1574,11 +1365,9 @@
     function goToStep3() {
       schoolClasses.forEach(c => {
         c.teachers.forEach(t => {
-          // 規則 2：只採計長期代理和專任；未在教師名冊者不採計
-          const inRosterOk = t.inRoster !== false; // 若不在名冊則為 false
+          const inRosterOk = t.inRoster !== false;
           const isProxyOrFormal = (t.type === '長期代理' || t.type === '正式教師');
           const isFullTime = (t.role === '專任教師');
-          
           t.isQualifiedStep2 = Boolean(t.isQualifiedStep1 && inRosterOk && isProxyOrFormal && isFullTime);
         });
       });
@@ -1630,7 +1419,7 @@
         if (!t.isQualifiedStep2) {
           if (t.inRoster === false) reasonLabel = '未列於教師名冊 (不採計)';
           else if (t.role.includes('校長') || t.role.includes('主管')) reasonLabel = '行政主管排除 (非專任)';
-          else if (t.role === '導師') reasonLabel = '導師身分排除 (非專任)';
+          else if (t.role === '導師') reasonLabel = t.homeroomClass ? `導師(${t.homeroomClass}班)排除 (非專任)` : '導師身分排除 (非專任)';
           else if (t.role !== '專任教師') reasonLabel = `非專任職務 (${t.role})`;
           else if (t.type !== '長期代理' && t.type !== '正式教師') reasonLabel = `非長代/正式 (${t.type})`;
           else if (!t.isQualifiedStep1) reasonLabel = '無任課該班排除';
@@ -1647,7 +1436,7 @@
             <td class="p-3 font-bold text-slate-800">
               ${t.name}
               ${t.role.includes('校長') || t.role.includes('主管') ? '<span class="ml-1 text-[10px] bg-rose-100 text-rose-800 px-1 py-0.5 rounded font-bold">行政</span>' : ''}
-              ${t.role === '導師' ? '<span class="ml-1 text-[10px] bg-amber-100 text-amber-800 px-1 py-0.5 rounded font-bold">導師</span>' : ''}
+              ${t.role === '導師' ? `<span class="ml-1 text-[10px] bg-amber-100 text-amber-800 px-1 py-0.5 rounded font-bold">${t.homeroomClass ? t.homeroomClass + '導師' : '導師'}</span>` : ''}
             </td>
             <td class="p-3 text-slate-700">${t.subject}</td>
             <td class="p-3">${rosterBadge}</td>
@@ -1656,7 +1445,7 @@
                 ${t.type === '長期代理' ? '長期代理 (長代)' : t.type}
               </span>
             </td>
-            <td class="p-3 text-slate-600">${t.role}</td>
+            <td class="p-3 text-slate-600">${t.homeroomClass ? t.homeroomClass + '導師' : t.role}</td>
             <td class="p-3">
               ${t.isQualifiedStep2
                 ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${t.type === '長期代理' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-800'}">✓ 採計 (${t.type === '長期代理' ? '長代優先' : '專任正式'})</span>`
@@ -1678,8 +1467,7 @@
         proxies.sort((a, b) => {
           const catA = SUBJECT_CATEGORIES[a.category]?.order || 99;
           const catB = SUBJECT_CATEGORIES[b.category]?.order || 99;
-          if (catA !== catB) return catA - catB;
-          return (b.seniority || 0) - (a.seniority || 0);
+          return catA - catB;
         });
         c.proxySorted = proxies;
       });
@@ -1724,7 +1512,7 @@
       if (!tbody) return;
       const currentClass = schoolClasses.find(c => c.className === selectedClassId);
       if (!currentClass || !currentClass.proxySorted || currentClass.proxySorted.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">${selectedClassId} 班無任課之長期代理 (長代) 教師。</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-400">${selectedClassId} 班無任課之長期代理 (長代) 教師。</td></tr>`;
         return;
       }
 
@@ -1747,7 +1535,6 @@
             </span>
           </td>
           <td class="p-3 text-slate-700">${t.subject}</td>
-          <td class="p-3 text-slate-600">${t.seniority || 1} 年</td>
           <td class="p-3 text-xs text-slate-500">該班長代：依科別順位排定</td>
           <td class="p-3 text-center space-x-1">
             <button onclick="moveStep4Item(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-bold">↑ 上移</button>
@@ -1757,33 +1544,36 @@
       `).join('');
     }
 
+    function sortFormalTeachers(list) {
+      return [...list].sort((a, b) => {
+        const senA = parseFloat(a.seniority) || 0;
+        const senB = parseFloat(b.seniority) || 0;
+        
+        if (Math.abs(senA - senB) > 0.0001) {
+          return senioritySortOrder === 'asc' ? senA - senB : senB - senA;
+        }
+
+        // 連續專任計算相同：依「年紀輕的優先」
+        const ageA = a.ageNum !== undefined && a.ageNum !== null ? a.ageNum : parseAgeInfo(a.age).num;
+        const ageB = b.ageNum !== undefined && b.ageNum !== null ? b.ageNum : parseAgeInfo(b.age).num;
+        if (ageA !== null && ageB !== null && ageA !== ageB) {
+          return ageA - ageB; // 歲數小 (年紀輕) 優先
+        }
+
+        return 0;
+      });
+    }
+
     function goToStep5() {
       schoolClasses.forEach(c => {
-        const formals = c.teachers.filter(t => t.isQualifiedStep2 && t.type === '正式教師');
+        const formals = c.teachers.filter(t => t.isQualifiedStep2 && t.type === '正式教師' && t.role === '專任教師');
         c.formalSorted = sortFormalTeachers(formals);
       });
 
       renderStep5Tabs();
       renderStep5Table();
       switchStep(5);
-      showToast('已進入第 4 步【各班專任正式年資排序】！', 'info');
-    }
-
-    function sortFormalTeachers(list) {
-      return [...list].sort((a, b) => {
-        const senA = parseFloat(a.seniority) || 0;
-        const senB = parseFloat(b.seniority) || 0;
-        const diff = senioritySortOrder === 'asc' ? senA - senB : senB - senA;
-        if (Math.abs(diff) > 0.001) return diff;
-
-        // 年資相同時，年紀輕的優先 (youngness 分數高者出生晚、年齡小)
-        const scoreA = parseYoungnessScore(a.birth);
-        const scoreB = parseYoungnessScore(b.birth);
-        if (scoreA !== scoreB) {
-          return scoreB - scoreA;
-        }
-        return 0;
-      });
+      showToast('已進入第 4 步【各班專任正式依連續專任計算排序】！', 'info');
     }
 
     function renderStep5Tabs() {
@@ -1791,7 +1581,7 @@
       if (!container) return;
       container.innerHTML = schoolClasses.map(c => `
         <button onclick="selectStep5Class('${c.className}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${c.className === selectedClassId ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-          ${c.className} 班 (${(c.formalSorted || []).length}位正式)
+          ${c.className} 班 (${(c.formalSorted || []).length}位正式專任)
         </button>
       `).join('');
       document.getElementById('step5-class-summary').textContent = `目前班級：${selectedClassId} 班`;
@@ -1827,19 +1617,28 @@
       tbody.innerHTML = currentClass.formalSorted.map((t, idx) => {
         const prev = currentClass.formalSorted[idx - 1];
         const next = currentClass.formalSorted[idx + 1];
-        const isTied = (prev && Math.abs(prev.seniority - t.seniority) < 0.001) ||
-                       (next && Math.abs(next.seniority - t.seniority) < 0.001);
+        const isTiedWithPrev = prev && Math.abs((prev.seniority || 0) - (t.seniority || 0)) < 0.001;
+        const isTiedWithNext = next && Math.abs((next.seniority || 0) - (t.seniority || 0)) < 0.001;
+        const isTied = isTiedWithPrev || isTiedWithNext;
+
+        let ruleText = '依連續專任計算排序';
+        if (isTied) {
+          const ageA = t.ageNum !== undefined && t.ageNum !== null ? t.ageNum : parseAgeInfo(t.age).num;
+          if (ageA !== null) {
+            ruleText = `<span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">連續專任相同(${t.seniority})，年紀輕者優先</span>`;
+          } else {
+            ruleText = `<span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">連續專任相同(${t.seniority})，可按右側微調</span>`;
+          }
+        }
 
         return `
           <tr class="hover:bg-emerald-50/40 transition ${isTied ? 'bg-amber-50/30' : ''}">
             <td class="p-3 text-center font-bold text-emerald-800 bg-slate-50 font-mono">正式第 ${idx + 1} 順位</td>
             <td class="p-3 font-bold text-slate-800">${t.name}</td>
             <td class="p-3 text-slate-700">${t.subject}</td>
-            <td class="p-3 font-bold text-indigo-700 text-sm">${t.seniority} 年</td>
-            <td class="p-3 font-medium text-slate-700">${t.birth || '<span class="text-slate-300">—</span>'}</td>
-            <td class="p-3 text-xs text-slate-600">
-              ${isTied ? `<span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">⚡ 年資相同(${t.seniority}年)：年紀輕者優先</span>` : '依年資排序'}
-            </td>
+            <td class="p-3 font-black text-indigo-700 text-sm">${t.seniority !== undefined && t.seniority !== '' ? t.seniority : 0}</td>
+            <td class="p-3 font-semibold text-slate-700">${t.age || '—'}</td>
+            <td class="p-3 text-xs text-slate-600">${ruleText}</td>
             <td class="p-3 text-center space-x-1">
               <button onclick="moveStep5Item(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-bold">↑ 上移</button>
               <button onclick="moveStep5Item(${idx}, 1)" ${idx === currentClass.formalSorted.length - 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-bold">↓ 下移</button>
@@ -1855,21 +1654,15 @@
           ...t,
           group: '長期代理 (長代優先)',
           finalOrder: idx + 1,
-          ruleExplanation: `長代順位第 ${idx + 1} 位 (${t.category}科, 年資${t.seniority}年)`
+          ruleExplanation: `長代順位第 ${idx + 1} 位 (${t.category}科)`
         }));
 
         const formalPart = (c.formalSorted || []).map((t, idx) => {
-          const prev = c.formalSorted[idx - 1];
-          const next = c.formalSorted[idx + 1];
-          const isTied = (prev && Math.abs(prev.seniority - t.seniority) < 0.001) ||
-                         (next && Math.abs(next.seniority - t.seniority) < 0.001);
-          const tieNote = isTied ? ' [年資相同，年紀輕者優先]' : '';
-
           return {
             ...t,
             group: '專任正式 (接續輪值)',
             finalOrder: proxyPart.length + idx + 1,
-            ruleExplanation: `正式順位第 ${idx + 1} 位 (年資${t.seniority}年)${tieNote}`
+            ruleExplanation: `正式順位第 ${idx + 1} 位 (連續專任${t.seniority !== undefined ? t.seniority : 0}${t.age && t.age !== '—' ? ', ' + t.age : ''})`
           };
         });
 
@@ -1895,7 +1688,6 @@
       renderStep6SingleClassView();
     }
 
-    // 渲染完全符合圖片格式的總表（無多餘序位數字）
     function renderMatrixOverviewTable() {
       const tbody = document.getElementById('matrix-overview-tbody');
       if (!tbody) return;
@@ -1916,7 +1708,7 @@
         const roster = c.finalRoster || [];
         const classCount = roster.length;
 
-        // 第一列：標題與序位數字 (只顯示到該班實際人數，多餘欄位保持純白無格線)
+        // 第一列：標題與序位數字 (只顯示到該班實際人數)
         html += `<tr class="bg-white border-t-2 border-slate-400 font-sans text-xs">`;
         html += `<td class="border border-slate-400 px-3 py-1.5 font-bold text-slate-900 w-36 whitespace-nowrap">代理導師序位表</td>`;
         html += `<td class="border border-slate-400 px-3 py-1.5 font-bold text-slate-900 w-24 whitespace-nowrap bg-slate-50">班級順位</td>`;
@@ -1925,13 +1717,12 @@
           if (i <= classCount) {
             html += `<td class="border border-slate-400 px-2 py-1.5 font-mono font-medium text-slate-800 min-w-[70px] text-center">${i}</td>`;
           } else {
-            // 超出該班人數的格子：刪除數字且不加邊框，與截圖一致
             html += `<td class="border-y border-transparent border-r border-transparent px-2 py-1.5 bg-white"></td>`;
           }
         }
         html += `</tr>`;
 
-        // 第二列：班級代碼與老師姓名 (長代維持黃底，無人處不畫多餘邊框)
+        // 第二列：班級代碼與老師姓名 (長代標鮮黃底)
         html += `<tr class="bg-white text-xs border-b border-slate-300">`;
         html += `<td class="border border-slate-400 px-3 py-1.5"></td>`;
         html += `<td class="border border-slate-400 px-3 py-1.5 font-black text-slate-900 font-mono text-sm bg-slate-50 text-center">${c.className}</td>`;
@@ -1944,7 +1735,6 @@
               ${teacher.name}
             </td>`;
           } else {
-            // 超出該班人數：空白且無邊框
             html += `<td class="border-y border-transparent border-r border-transparent px-2 py-1.5 bg-white"></td>`;
           }
         }
@@ -1992,7 +1782,7 @@
       const tbody = document.getElementById('step6-single-tbody');
       if (!tbody) return;
 
-      tbody.innerHTML = currentClass.finalRoster.map((t, idx) => `
+      tbody.innerHTML = (currentClass.finalRoster || []).map((t, idx) => `
         <tr class="hover:bg-slate-50 transition ${t.type === '長期代理' ? 'bg-amber-100/60' : 'bg-emerald-50/20'}">
           <td class="p-3 text-center font-black text-slate-800 bg-white font-mono">
             <span class="inline-flex items-center justify-center w-6 h-6 rounded-full ${t.type === '長期代理' ? 'bg-[#FFFF00] text-slate-900 border border-amber-400' : 'bg-slate-100 text-slate-800'} font-bold">${idx + 1}</span>
@@ -2005,8 +1795,8 @@
           <td class="p-3 font-bold text-slate-900 text-sm">${t.name}</td>
           <td class="p-3 text-slate-700">${t.subject}</td>
           <td class="p-3 text-slate-600">${t.type === '長期代理' ? '長期代理 (長代)' : t.type}</td>
-          <td class="p-3 font-bold text-indigo-700">${t.seniority} 年</td>
-          <td class="p-3 text-slate-600">${t.birth || '—'}</td>
+          <td class="p-3 font-bold text-indigo-700">${t.type === '長期代理' ? '—' : (t.seniority !== undefined && t.seniority !== '' ? t.seniority : 0)}</td>
+          <td class="p-3 font-medium text-slate-700">${t.type === '長期代理' ? '—' : (t.age || '—')}</td>
           <td class="p-3 text-xs text-slate-500 font-mono">${t.ruleExplanation}</td>
           <td class="p-3 text-center space-x-1">
             <button onclick="moveStep6SingleItem(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-bold">↑ 上移</button>
@@ -2016,7 +1806,6 @@
       `).join('');
     }
 
-    // 匯出 Excel：完全依照使用者截圖二列架構呈現，刪除多餘序位數字
     function exportToExcel() {
       if (schoolClasses.length === 0) {
         showToast('名冊為空，無法匯出！', 'error');
@@ -2030,14 +1819,12 @@
         const roster = c.finalRoster || [];
         const classCount = roster.length;
 
-        // 第一列：只輸出到該班實際人數 (例如 10 人就只輸出 1 到 10)
         const headerRow = ['代理導師序位表', '班級順位'];
         for (let i = 1; i <= classCount; i++) {
           headerRow.push(i);
         }
         matrixRows.push(headerRow);
 
-        // 第二列：班級與該班老師姓名
         const dataRow = ['', c.className];
         for (let i = 0; i < classCount; i++) {
           dataRow.push(roster[i].name);
@@ -2048,23 +1835,22 @@
       const wsMatrix = XLSX.utils.aoa_to_sheet(matrixRows);
       XLSX.utils.book_append_sheet(wb, wsMatrix, '代理導師序位總表');
 
-      // 同時保留各班詳細明細分頁
       schoolClasses.forEach(c => {
         const classRows = [
           [`115學年度 ${c.className} 班 代課導師輪值順序名冊`],
           ['班級', `${c.className} 班`, '列印日期', new Date().toLocaleDateString('zh-TW')],
           [],
-          ['順位', '輪值群組', '教師姓名', '任課科目', '身分聘別', '年資(年)', '出生年月日/年次', '排定說明']
+          ['順位', '輪值群組', '教師姓名', '任課科目', '身分聘別', '連續專任計算', '年紀', '排定說明']
         ];
-        c.finalRoster.forEach((t, idx) => {
+        (c.finalRoster || []).forEach((t, idx) => {
           classRows.push([
             idx + 1,
             t.group,
             t.name,
             t.subject,
             t.type === '長期代理' ? '長期代理(長代)' : t.type,
-            t.seniority,
-            t.birth || '',
+            t.type === '長期代理' ? '' : (t.seniority !== undefined ? t.seniority : ''),
+            t.type === '長期代理' ? '' : (t.age || ''),
             t.ruleExplanation
           ]);
         });
@@ -2081,8 +1867,6 @@
       document.getElementById('input-schedule-file')?.addEventListener('change', handleScheduleFile);
       document.getElementById('input-seniority-file')?.addEventListener('change', handleSeniorityFile);
       document.getElementById('input-roster-file')?.addEventListener('change', handleRosterExcelFile);
-
-      document.getElementById('load-sample-btn')?.addEventListener('click', loadSampleData);
 
       document.getElementById('reset-system-btn')?.addEventListener('click', () => {
         schoolClasses = [];
