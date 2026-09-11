@@ -88,7 +88,7 @@
       </div>
     </div>
 
-  <!-- Stepper Navigation Bar -->
+    <!-- Stepper Navigation Bar -->
     <div class="bg-slate-100/80 border-t border-slate-200 overflow-x-auto">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
         <ol class="flex items-center justify-between text-xs font-medium min-w-[760px] gap-2" id="wizard-steps-container">
@@ -99,12 +99,12 @@
           <div class="w-6 h-0.5 bg-slate-300"></div>
           <li class="step-indicator flex-1 flex items-center space-x-2 text-slate-400" data-step="2">
             <span class="step-badge w-6 h-6 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-xs">2</span>
-            <span class="step-title">1. 各班任課審核</span>
+            <span class="step-title">1. 全校允許/不允許設定</span>
           </li>
           <div class="w-6 h-0.5 bg-slate-300"></div>
           <li class="step-indicator flex-1 flex items-center space-x-2 text-slate-400" data-step="3">
             <span class="step-badge w-6 h-6 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-xs">3</span>
-            <span class="step-title">2. 只採計長期代理和專任</span>
+            <span class="step-title">2. 各班任課審核</span>
           </li>
           <div class="w-6 h-0.5 bg-slate-300"></div>
           <li class="step-indicator flex-1 flex items-center space-x-2 text-slate-400" data-step="4">
@@ -228,7 +228,157 @@
         <!-- Step 1 Navigation Button -->
         <div class="mt-4 flex items-center justify-end pt-4 border-t border-slate-100">
           <button id="btn-goto-step-2" disabled class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md shadow-indigo-100 flex items-center gap-2">
-            <span>進行第 1 步【各班任課老師審核】</span>
+            <span>進行第 1 步【全校允許/不允許設定】</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- STEP 2: 全校教師排代導資格【全校允許 / 全校不允許】(置於各班任課前) -->
+    <!-- ============================================================== -->
+    <section id="step-2-content" class="step-panel space-y-6 hidden">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 mb-1">
+              規則 2 專屬分頁：全校教師代導資格管理 (全校允許 / 全校不允許)
+            </div>
+            <h2 class="text-lg font-bold text-slate-800">全校教師排代導資格總覽設定</h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+              系統預設：僅採計「長期代理」與「專任教師」，且「名列教師名冊」者。在此專屬分頁中，您可以<b>一鍵設定任何老師為「全校允許」或「全校不允許」</b>，設定將直接套用到全校所有班級！
+            </p>
+          </div>
+          <!-- 統計徽章 -->
+          <div class="flex items-center gap-2 text-xs">
+            <span id="step2-stat-allowed" class="px-3 py-1 bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 rounded-lg">允許排代導：0 人</span>
+            <span id="step2-stat-disallowed" class="px-3 py-1 bg-rose-50 text-rose-700 font-bold border border-rose-200 rounded-lg">不允許 (排除)：0 人</span>
+          </div>
+        </div>
+
+        <!-- 搜尋與身分/狀態篩選控制列 -->
+        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2 text-xs flex-1">
+            <div class="relative w-56">
+              <input type="text" id="step2-search-input" placeholder="搜尋教師姓名或職務..." oninput="renderStep2GlobalQualificationTable()" class="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+
+            <!-- 狀態篩選 -->
+            <select id="step2-status-filter" onchange="renderStep2GlobalQualificationTable()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white text-xs font-semibold text-slate-700 focus:outline-none">
+              <option value="all">全部狀態 (允許 + 不允許)</option>
+              <option value="allowed">僅顯示【全校允許】</option>
+              <option value="disallowed">僅顯示【全校不允許】</option>
+            </select>
+
+            <!-- 職務/身分篩選 -->
+            <select id="step2-role-filter" onchange="renderStep2GlobalQualificationTable()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white text-xs font-semibold text-slate-700 focus:outline-none">
+              <option value="all">全部職稱/身分</option>
+              <option value="proxy">長期代理 (長代)</option>
+              <option value="formal_fulltime">專任正式教師</option>
+              <option value="homeroom">導師 (含701等班號)</option>
+              <option value="admin">兼行政主管</option>
+              <option value="not_in_roster">未在教師名冊</option>
+            </select>
+          </div>
+
+          <!-- 批次重設回系統預設 -->
+          <div>
+            <button onclick="resetAllToDefaultQualification()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 transition shadow-sm">
+              ↺ 全部重設為系統預設規則
+            </button>
+          </div>
+        </div>
+
+        <!-- Table: 移除「任課班級」與「連續專任計算」欄位 -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar max-h-[500px]">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-100 text-slate-700 font-bold sticky top-0 border-b border-slate-200 z-10">
+              <tr>
+                <th class="p-3 w-12 text-center">#</th>
+                <th class="p-3">教師姓名</th>
+                <th class="p-3">教師名冊核對</th>
+                <th class="p-3">聘任身分</th>
+                <th class="p-3">現任職務</th>
+                <th class="p-3">系統預設判定</th>
+                <th class="p-3 text-center w-56">全校代導資格 (點擊切換)</th>
+              </tr>
+            </thead>
+            <tbody id="step2-tbody" class="divide-y divide-slate-100">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Step 2 Navigation -->
+        <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-100">
+          <button id="btn-back-to-step-1" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+            ← 回上一步 (匯入配課)
+          </button>
+          <button id="btn-goto-step-3" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
+            <span>全校資格設定確認無誤，進行第 2 步【各班任課審核】</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- STEP 3: 規則 1【各班任課審核 (只有任課的老師可以被排代導)】 -->
+    <!-- ============================================================== -->
+    <section id="step-3-content" class="step-panel space-y-6 hidden">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 mb-1">
+              規則 1 審核：只有任課的老師可以被排代導
+            </div>
+            <h2 class="text-lg font-bold text-slate-800">各班任課教師資格審核</h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+              依據配課表確認每個班級有哪些任課教師。只有在該班有授課事實且全校資格為允許者才能進入後續排代導。
+            </p>
+          </div>
+          <div>
+            <span id="step3-class-summary" class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-700 rounded-lg">目前班級：—</span>
+          </div>
+        </div>
+
+        <!-- Class Selector Tabs -->
+        <div class="pt-3">
+          <label class="block text-xs font-bold text-slate-600 mb-2">請選擇要審核任課的班級：</label>
+          <div id="step3-class-tabs" class="flex flex-wrap gap-2 pb-2">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar max-h-[460px] mt-3">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 font-semibold sticky top-0 border-b border-slate-200 z-10">
+              <tr>
+                <th class="p-3 w-12 text-center">#</th>
+                <th class="p-3">姓名</th>
+                <th class="p-3">任課科目</th>
+                <th class="p-3">聘任身分</th>
+                <th class="p-3">現任職務</th>
+                <th class="p-3">任課狀態</th>
+                <th class="p-3 text-center w-32">手動設定</th>
+              </tr>
+            </thead>
+            <tbody id="step3-tbody" class="divide-y divide-slate-100">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Step 3 Navigation -->
+        <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-100">
+          <button id="btn-back-to-step-2" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+            ← 回上一步 (全校允許/不允許設定)
+          </button>
+          <button id="btn-goto-step-4" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
+            <span>各班任課確認無誤，進行第 3 步【各班長代科別排序】</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </button>
         </div>
@@ -289,7 +439,7 @@
             ← 回上一步 (匯入配課)
           </button>
           <button id="btn-goto-step-3" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
-            <span>各班任課確認無誤，進行第 2 步【只採計長期代理和專任】</span>
+            <span>各班任課確認無誤，進行第 2 步【全校允許/不允許設定】</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </button>
         </div>
@@ -297,44 +447,75 @@
     </section>
 
     <!-- ============================================================== -->
-    <!-- STEP 3: 規則 2【只採計長期代理和專任 (未在教師名冊者不採計)】 -->
+    <!-- STEP 3: 獨立專屬分頁：全校教師排代導資格【全校允許 / 全校不允許】 -->
     <!-- ============================================================== -->
     <section id="step-3-content" class="step-panel space-y-6 hidden">
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
           <div>
-            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 mb-1">
-              規則 2 審核：只採計長期代理和專任
+            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-purple-100 text-purple-800 mb-1">
+              規則 2 專屬分頁：全校教師代導資格管理 (全校允許 / 全校不允許)
             </div>
-            <h2 class="text-lg font-bold text-slate-800">各班身分資格審查（只採計長期代理與專任；未在教師名冊者不採計）</h2>
-            <p class="text-xs text-slate-500 mt-0.5">系統依據規則：僅採計「長期代理」與「專任教師」，且<span class="text-indigo-600 font-bold">必須名列於教師名冊中</span>；行政人員、導師或未在名冊者一律不予採計。</p>
+            <h2 class="text-lg font-bold text-slate-800">全校教師排代導資格總覽設定</h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+              系統預設：僅採計「長期代理」與「專任教師」，且「名列教師名冊」者。在此專屬分頁中，您可以<b>一鍵設定任何老師為「全校允許」或「全校不允許」</b>，設定將直接套用到全校所有班級！
+            </p>
           </div>
-          <div>
-            <span id="step3-class-summary" class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-700 rounded-lg">目前班級：—</span>
+          <!-- 統計徽章 -->
+          <div class="flex items-center gap-2 text-xs">
+            <span id="step3-stat-allowed" class="px-3 py-1 bg-emerald-50 text-emerald-700 font-bold border border-emerald-200 rounded-lg">允許排代導：0 人</span>
+            <span id="step3-stat-disallowed" class="px-3 py-1 bg-rose-50 text-rose-700 font-bold border border-rose-200 rounded-lg">不允許 (排除)：0 人</span>
           </div>
         </div>
 
-        <!-- Class Selector Tabs -->
-        <div class="pt-3">
-          <label class="block text-xs font-bold text-slate-600 mb-2">請選擇要審核的班級：</label>
-          <div id="step3-class-tabs" class="flex flex-wrap gap-2 pb-2">
-            <!-- Rendered by JS -->
+        <!-- 搜尋與身分/狀態篩選控制列 -->
+        <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-2 text-xs flex-1">
+            <div class="relative w-56">
+              <input type="text" id="step3-search-input" placeholder="搜尋教師姓名或職務..." oninput="renderStep3Table()" class="w-full pl-8 pr-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+              <svg class="w-4 h-4 text-slate-400 absolute left-2.5 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+
+            <!-- 狀態篩選 -->
+            <select id="step3-status-filter" onchange="renderStep3Table()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white text-xs font-semibold text-slate-700 focus:outline-none">
+              <option value="all">全部狀態 (允許 + 不允許)</option>
+              <option value="allowed">僅顯示【全校允許】</option>
+              <option value="disallowed">僅顯示【全校不允許】</option>
+            </select>
+
+            <!-- 職務/身分篩選 -->
+            <select id="step3-role-filter" onchange="renderStep3Table()" class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-white text-xs font-semibold text-slate-700 focus:outline-none">
+              <option value="all">全部職稱/身分</option>
+              <option value="proxy">長期代理 (長代)</option>
+              <option value="formal_fulltime">專任正式教師</option>
+              <option value="homeroom">導師 (含701等班號)</option>
+              <option value="admin">兼行政主管</option>
+              <option value="not_in_roster">未在教師名冊</option>
+            </select>
+          </div>
+
+          <!-- 批次重設回系統預設 -->
+          <div>
+            <button onclick="resetAllToDefaultQualification()" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 bg-white border border-slate-300 hover:bg-slate-100 transition shadow-sm">
+              ↺ 全部重設為系統預設規則
+            </button>
           </div>
         </div>
 
         <!-- Table -->
-        <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar max-h-[460px] mt-3">
+        <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar max-h-[500px]">
           <table class="w-full text-left text-xs border-collapse">
-            <thead class="bg-slate-50 text-slate-600 font-semibold sticky top-0 border-b border-slate-200 z-10">
+            <thead class="bg-slate-100 text-slate-700 font-bold sticky top-0 border-b border-slate-200 z-10">
               <tr>
                 <th class="p-3 w-12 text-center">#</th>
-                <th class="p-3">姓名</th>
-                <th class="p-3">任課科目</th>
+                <th class="p-3">教師姓名</th>
+                <th class="p-3">任課班級</th>
                 <th class="p-3">教師名冊核對</th>
                 <th class="p-3">聘任身分</th>
                 <th class="p-3">現任職務</th>
-                <th class="p-3">採計判定狀態</th>
-                <th class="p-3 text-center w-32">資格覆核</th>
+                <th class="p-3">連續專任計算</th>
+                <th class="p-3">系統預設判定</th>
+                <th class="p-3 text-center w-56">全校代導資格 (點擊切換)</th>
               </tr>
             </thead>
             <tbody id="step3-tbody" class="divide-y divide-slate-100">
@@ -349,7 +530,7 @@
             ← 回上一步 (各班任課審核)
           </button>
           <button id="btn-goto-step-4" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
-            <span>身分資格確認無誤，進行第 3 步【各班長代科別排序】</span>
+            <span>全校資格設定確認無誤，進行第 3 步【各班長代科別排序】</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
           </button>
         </div>
@@ -406,7 +587,7 @@
         <!-- Step 4 Navigation -->
         <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-100">
           <button id="btn-back-to-step-3" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
-            ← 回上一步 (身分審核)
+            ← 回上一步 (各班任課審核)
           </button>
           <button id="btn-goto-step-5" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
             <span>各班長代排序確認無誤，進行第 4 步【各班正式連續專任計算排序】</span>
@@ -613,6 +794,43 @@
     </div>
   </div>
 
+  <!-- 手動允許排代導教師設定彈出視窗 (全校通用) -->
+  <div id="manual-allow-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 mx-4 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="flex items-center space-x-2">
+          <span class="w-7 h-7 rounded-lg bg-purple-600 text-white flex items-center justify-center font-bold text-xs">⚡</span>
+          <div>
+            <h3 class="font-bold text-slate-800 text-base">全校教師手動允許排代導設定</h3>
+            <p class="text-[11px] text-slate-500">在此勾選的老師，將自動在全校所有該老師有任課的班級中排入代導輪值。</p>
+          </div>
+        </div>
+        <button onclick="closeManualAllowModal()" class="text-slate-400 hover:text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <!-- Search Input inside modal -->
+      <div class="pt-3 pb-2">
+        <input type="text" id="manual-modal-search" placeholder="輸入教師姓名快速搜尋..." oninput="filterManualAllowModalList()" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-purple-500 focus:outline-none" />
+      </div>
+
+      <!-- Teachers List -->
+      <div class="overflow-y-auto custom-scrollbar flex-1 border border-slate-200 rounded-xl divide-y divide-slate-100 my-2" id="manual-modal-teacher-list">
+        <!-- Rendered by JS -->
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
+        <span class="text-xs text-slate-500 font-medium" id="manual-modal-count-info">已允許 0 位老師</span>
+        <div class="flex items-center space-x-2">
+          <button onclick="closeManualAllowModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 shadow-sm transition">
+            完成並返回
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification Container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
 
@@ -622,6 +840,9 @@
     let selectedClassId = ''; // 當前所選檢視班級
     let step6ViewMode = 'all'; // 'all' or 'single'
     let hasUploadedRoster = false; // 是否已匯入名冊
+    
+    // 全校教師全域資格對照表 (Key: 姓名, Value: boolean true: 全校允許, false: 全校不允許)
+    let globalTeacherStatusMap = new Map();
 
     // 科目分類優先度 (國 -> 英 -> 數 -> 社 -> 自 -> 藝)
     const SUBJECT_CATEGORIES = {
@@ -782,8 +1003,8 @@
       const bannerText = document.getElementById('banner-text');
       const hints = {
         1: '步驟 1：匯入配課表、年資表與名冊表。系統已依據實際檔案整合全校各班師資清單。',
-        2: '步驟 2 (規則 1)：各班任課審核。只有在該班有任課者才能排該班代導。',
-        3: '步驟 3 (規則 2)：只採計長期代理和專任教師，若未列於教師名冊則不予採計。',
+        2: '步驟 2 (規則 2 獨立分頁)：全校教師排代導資格總覽。可在此為任何老師一鍵設定【全校允許】或【全校不允許】！',
+        3: '步驟 3 (規則 1)：各班任課審核。只有在該班有任課者才能排該班代導。',
         4: '步驟 4 (規則 3 & 4)：各班長期代理教師科別排序。依「國英數社自藝」順位排列。',
         5: '步驟 5 (規則 5)：各班專任正式教師依「連續專任計算」排序，數值相同者依年紀輕者優先。',
         6: '步驟 6：全校序位總表已完成！完全依據指定二列格式呈現，長代老師標以鮮明黃底。'
@@ -1430,49 +1651,250 @@
       goToStep2();
     }
 
+    // ==============================================================
+    // STEP 2: 全校教師代導資格管理 (全校允許 / 全校不允許) - 置於各班任課審核前
+    // ==============================================================
+
+    // 取得某位老師的「系統預設判定」狀態 (true: 預設採計, false: 預設排除)
+    function getDefaultTeacherQualification(tName) {
+      let teacherObj = null;
+      for (const c of schoolClasses) {
+        const found = c.teachers.find(t => t.name === tName);
+        if (found) { teacherObj = found; break; }
+      }
+      const g = globalTeacherMap.get(tName);
+      const inRoster = teacherObj ? (teacherObj.inRoster !== false) : (g ? Boolean(g.fromRoster || g.inRoster) : true);
+      const role = teacherObj?.role || g?.role || '專任教師';
+      const type = teacherObj?.type || g?.type || '正式教師';
+
+      const isProxyOrFormal = (type === '長期代理' || type === '正式教師');
+      const isFullTime = (role === '專任教師');
+      return Boolean(inRoster && isProxyOrFormal && isFullTime);
+    }
+
+    // 初始化/同步全校教師狀態對照表
+    function initGlobalTeacherStatusMap() {
+      schoolClasses.forEach(c => {
+        c.teachers.forEach(t => {
+          if (!globalTeacherStatusMap.has(t.name)) {
+            globalTeacherStatusMap.set(t.name, getDefaultTeacherQualification(t.name));
+          }
+        });
+      });
+    }
+
+    // 切換某位老師為「全校允許」或「全校不允許」
+    function toggleGlobalTeacherStatus(teacherName) {
+      const current = globalTeacherStatusMap.get(teacherName);
+      const newStatus = !current;
+      globalTeacherStatusMap.set(teacherName, newStatus);
+      applyGlobalStatusToClasses();
+      renderStep2GlobalQualificationTable();
+      showToast(newStatus ? `⚡ 已將【${teacherName}】設為「全校允許排代導」！` : `🚫 已將【${teacherName}】設為「全校不允許 (排除)」！`, newStatus ? 'success' : 'info');
+    }
+
+    // 將全部老師重設為系統預設規則
+    function resetAllToDefaultQualification() {
+      schoolClasses.forEach(c => {
+        c.teachers.forEach(t => {
+          globalTeacherStatusMap.set(t.name, getDefaultTeacherQualification(t.name));
+        });
+      });
+      applyGlobalStatusToClasses();
+      renderStep2GlobalQualificationTable();
+      showToast('已將全校所有教師代導資格重設為系統預設規則！', 'info');
+    }
+
+    // 將全校狀態直接套用到所有班級
+    function applyGlobalStatusToClasses() {
+      schoolClasses.forEach(c => {
+        c.teachers.forEach(t => {
+          const isAllowed = globalTeacherStatusMap.has(t.name)
+            ? globalTeacherStatusMap.get(t.name)
+            : getDefaultTeacherQualification(t.name);
+
+          // 該班資格 = 該班有任課(Step1) 且 全校允許
+          t.isQualifiedStep2 = Boolean(t.isQualifiedStep1 && isAllowed);
+        });
+      });
+    }
+
     function goToStep2() {
       if (schoolClasses.length === 0) {
         showToast('請先載入班級與配課資料！', 'error');
         return;
       }
+      initGlobalTeacherStatusMap();
+      applyGlobalStatusToClasses();
+      renderStep2GlobalQualificationTable();
+      switchStep(2);
+      showToast('已進入第 1 步【全校允許/不允許設定】！', 'info');
+    }
+
+    // 渲染「全校允許/不允許設定」表格（不列出任課班級與連續專任計算）
+    function renderStep2GlobalQualificationTable() {
+      const tbody = document.getElementById('step2-tbody');
+      if (!tbody) return;
+
+      const searchKw = (document.getElementById('step2-search-input')?.value || '').trim().toLowerCase();
+      const statusFilter = document.getElementById('step2-status-filter')?.value || 'all';
+      const roleFilter = document.getElementById('step2-role-filter')?.value || 'all';
+
+      // 匯總全校所有唯一任課教師資訊
+      const uniqueTeachersMap = new Map();
+      schoolClasses.forEach(c => {
+        c.teachers.forEach(t => {
+          if (!uniqueTeachersMap.has(t.name)) {
+            const g = globalTeacherMap.get(t.name) || {};
+            uniqueTeachersMap.set(t.name, {
+              name: t.name,
+              type: t.type || g.type || '正式教師',
+              role: t.homeroomClass ? `${t.homeroomClass}導師` : (t.role || g.role || '專任教師'),
+              inRoster: t.inRoster !== false
+            });
+          }
+        });
+      });
+
+      let teacherList = Array.from(uniqueTeachersMap.values());
+
+      // 統計允許與不允許數量
+      let allowedCount = 0;
+      let disallowedCount = 0;
+      teacherList.forEach(t => {
+        const isAllowed = globalTeacherStatusMap.has(t.name)
+          ? globalTeacherStatusMap.get(t.name)
+          : getDefaultTeacherQualification(t.name);
+        if (isAllowed) allowedCount++;
+        else disallowedCount++;
+      });
+
+      const statAllowed = document.getElementById('step2-stat-allowed');
+      const statDisallowed = document.getElementById('step2-stat-disallowed');
+      if (statAllowed) statAllowed.textContent = `允許排代導：${allowedCount} 人`;
+      if (statDisallowed) statDisallowed.textContent = `不允許 (排除)：${disallowedCount} 人`;
+
+      // 搜尋與篩選
+      if (searchKw) {
+        teacherList = teacherList.filter(t => t.name.toLowerCase().includes(searchKw) || t.role.toLowerCase().includes(searchKw));
+      }
+
+      if (statusFilter !== 'all') {
+        teacherList = teacherList.filter(t => {
+          const isAllowed = globalTeacherStatusMap.has(t.name) ? globalTeacherStatusMap.get(t.name) : getDefaultTeacherQualification(t.name);
+          return statusFilter === 'allowed' ? isAllowed : !isAllowed;
+        });
+      }
+
+      if (roleFilter !== 'all') {
+        teacherList = teacherList.filter(t => {
+          if (roleFilter === 'proxy') return t.type === '長期代理';
+          if (roleFilter === 'formal_fulltime') return t.type === '正式教師' && t.role === '專任教師';
+          if (roleFilter === 'homeroom') return t.role.includes('導師');
+          if (roleFilter === 'admin') return t.role.includes('校長') || t.role.includes('主管') || t.role.includes('行政');
+          if (roleFilter === 'not_in_roster') return !t.inRoster;
+          return true;
+        });
+      }
+
+      if (teacherList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">查無符合搜尋或篩選條件之教師。</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = teacherList.map((t, idx) => {
+        const isAllowed = globalTeacherStatusMap.has(t.name)
+          ? globalTeacherStatusMap.get(t.name)
+          : getDefaultTeacherQualification(t.name);
+
+        const defaultOk = getDefaultTeacherQualification(t.name);
+        const isOverridden = (isAllowed !== defaultOk);
+
+        let defaultExplanation = '';
+        if (defaultOk) {
+          defaultExplanation = '<span class="text-xs text-emerald-700 font-semibold">符合長代/專任標準</span>';
+        } else {
+          if (!t.inRoster) defaultExplanation = '<span class="text-xs text-rose-600 font-semibold">未在教師名冊中</span>';
+          else if (t.role.includes('導師')) defaultExplanation = '<span class="text-xs text-amber-700 font-semibold">導師身分排除</span>';
+          else if (t.role.includes('行政') || t.role.includes('主管')) defaultExplanation = '<span class="text-xs text-rose-600 font-semibold">兼行政主管排除</span>';
+          else defaultExplanation = '<span class="text-xs text-slate-500 font-semibold">非專任職務</span>';
+        }
+
+        const rosterBadge = t.inRoster
+          ? '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ 在名冊內</span>'
+          : '<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">✗ 未在名冊</span>';
+
+        return `
+          <tr class="hover:bg-slate-50 transition ${isAllowed ? 'bg-white' : 'bg-slate-50/70 text-slate-500'}">
+            <td class="p-3 text-slate-400 text-center font-mono">${idx + 1}</td>
+            <td class="p-3 font-bold text-slate-900 text-sm">
+              ${t.name}
+              ${isOverridden ? '<span class="ml-1 text-[10px] bg-purple-100 text-purple-800 border border-purple-200 px-1.5 py-0.5 rounded-full font-bold">手動變更</span>' : ''}
+            </td>
+            <td class="p-3">${rosterBadge}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold ${t.type === '長期代理' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-700'}">
+                ${t.type === '長期代理' ? '長期代理 (長代)' : t.type}
+              </span>
+            </td>
+            <td class="p-3 font-medium text-slate-700">${t.role}</td>
+            <td class="p-3">${defaultExplanation}</td>
+            <td class="p-3 text-center">
+              <button onclick="toggleGlobalTeacherStatus('${t.name}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-sm flex items-center justify-center gap-1.5 w-full ${isAllowed ? 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-200' : 'bg-rose-100 hover:bg-rose-200 text-rose-800 border border-rose-300'}">
+                <span>${isAllowed ? '✓ 全校允許排代導' : '✗ 全校不允許 (排除)'}</span>
+                <span class="text-[10px] opacity-75 font-normal">(點擊切換)</span>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ==============================================================
+    // STEP 3: 各班任課教師資格審核 (原 STEP 2)
+    // ==============================================================
+
+    function goToStep3() {
+      applyGlobalStatusToClasses();
       if (!selectedClassId && schoolClasses.length > 0) {
         selectedClassId = schoolClasses[0].className;
       }
-      renderStep2Tabs();
-      renderStep2Table();
-      switchStep(2);
-      showToast(`已進入第 1 步【各班任課審核】！正檢視 ${selectedClassId} 班。`, 'info');
+      renderStep3Tabs();
+      renderStep3Table();
+      switchStep(3);
+      showToast(`已進入第 2 步【各班任課審核】！正檢視 ${selectedClassId} 班。`, 'info');
     }
 
-    function renderStep2Tabs() {
-      const container = document.getElementById('step2-class-tabs');
+    function renderStep3Tabs() {
+      const container = document.getElementById('step3-class-tabs');
       if (!container) return;
       container.innerHTML = schoolClasses.map(c => `
-        <button onclick="selectStep2Class('${c.className}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${c.className === selectedClassId ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+        <button onclick="selectStep3Class('${c.className}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${c.className === selectedClassId ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
           ${c.className} 班 (${c.teachers.length}人)
         </button>
       `).join('');
-      document.getElementById('step2-class-summary').textContent = `目前班級：${selectedClassId} 班`;
+      document.getElementById('step3-class-summary').textContent = `目前班級：${selectedClassId} 班`;
     }
 
-    function selectStep2Class(cName) {
+    function selectStep3Class(cName) {
       selectedClassId = cName;
-      renderStep2Tabs();
-      renderStep2Table();
+      renderStep3Tabs();
+      renderStep3Table();
     }
 
-    function toggleStep2Teacher(id) {
+    function toggleStep3Teacher(id) {
       const currentClass = schoolClasses.find(c => c.className === selectedClassId);
       if (!currentClass) return;
       const teacher = currentClass.teachers.find(t => t.id === id);
       if (!teacher) return;
       teacher.isQualifiedStep1 = !teacher.isQualifiedStep1;
-      renderStep2Table();
+      applyGlobalStatusToClasses();
+      renderStep3Table();
       showToast(`已切換 ${teacher.name} 在 ${selectedClassId} 班之任課狀態為：${teacher.isQualifiedStep1 ? '【有任課】' : '【無任課】'}`);
     }
 
-    function renderStep2Table() {
-      const tbody = document.getElementById('step2-tbody');
+    function renderStep3Table() {
+      const tbody = document.getElementById('step3-tbody');
       if (!tbody) return;
       const currentClass = schoolClasses.find(c => c.className === selectedClassId);
       if (!currentClass || !currentClass.teachers) {
@@ -1501,7 +1923,7 @@
               : '<span class="text-xs font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">未任課該班</span>'}
           </td>
           <td class="p-3 text-center">
-            <button onclick="toggleStep2Teacher('${t.id}')" class="px-2.5 py-1 rounded text-xs font-bold ${t.isQualifiedStep1 ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">
+            <button onclick="toggleStep3Teacher('${t.id}')" class="px-2.5 py-1 rounded text-xs font-bold ${t.isQualifiedStep1 ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">
               ${t.isQualifiedStep1 ? '切換為未任課' : '切換為有任課'}
             </button>
           </td>
@@ -1509,106 +1931,9 @@
       `).join('');
     }
 
-    function goToStep3() {
-      schoolClasses.forEach(c => {
-        c.teachers.forEach(t => {
-          const inRosterOk = t.inRoster !== false;
-          const isProxyOrFormal = (t.type === '長期代理' || t.type === '正式教師');
-          const isFullTime = (t.role === '專任教師');
-          t.isQualifiedStep2 = Boolean(t.isQualifiedStep1 && inRosterOk && isProxyOrFormal && isFullTime);
-        });
-      });
-
-      renderStep3Tabs();
-      renderStep3Table();
-      switchStep(3);
-      showToast('已進入第 2 步【只採計長期代理和專任】！未在名冊者已排除。', 'info');
-    }
-
-    function renderStep3Tabs() {
-      const container = document.getElementById('step3-class-tabs');
-      if (!container) return;
-      container.innerHTML = schoolClasses.map(c => `
-        <button onclick="selectStep3Class('${c.className}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${c.className === selectedClassId ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
-          ${c.className} 班
-        </button>
-      `).join('');
-      document.getElementById('step3-class-summary').textContent = `目前班級：${selectedClassId} 班`;
-    }
-
-    function selectStep3Class(cName) {
-      selectedClassId = cName;
-      renderStep3Tabs();
-      renderStep3Table();
-    }
-
-    function toggleStep3Teacher(id) {
-      const currentClass = schoolClasses.find(c => c.className === selectedClassId);
-      if (!currentClass) return;
-      const teacher = currentClass.teachers.find(t => t.id === id);
-      if (!teacher) return;
-      teacher.isQualifiedStep2 = !teacher.isQualifiedStep2;
-      renderStep3Table();
-      showToast(`已切換 ${teacher.name} 狀態為：${teacher.isQualifiedStep2 ? '【採計排代導】' : '【不採計】'}`);
-    }
-
-    function renderStep3Table() {
-      const tbody = document.getElementById('step3-tbody');
-      if (!tbody) return;
-      const currentClass = schoolClasses.find(c => c.className === selectedClassId);
-      if (!currentClass || !currentClass.teachers) {
-        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400">查無此班級資料。</td></tr>`;
-        return;
-      }
-
-      tbody.innerHTML = currentClass.teachers.map((t, idx) => {
-        let reasonLabel = '';
-        if (!t.isQualifiedStep2) {
-          if (t.inRoster === false) reasonLabel = '未列於教師名冊 (不採計)';
-          else if (t.role.includes('校長') || t.role.includes('主管')) reasonLabel = '行政主管排除 (非專任)';
-          else if (t.role === '導師') reasonLabel = t.homeroomClass ? `導師(${t.homeroomClass}班)排除 (非專任)` : '導師身分排除 (非專任)';
-          else if (t.role !== '專任教師') reasonLabel = `非專任職務 (${t.role})`;
-          else if (t.type !== '長期代理' && t.type !== '正式教師') reasonLabel = `非長代/正式 (${t.type})`;
-          else if (!t.isQualifiedStep1) reasonLabel = '無任課該班排除';
-          else reasonLabel = '不符採計條件';
-        }
-
-        const rosterBadge = t.inRoster !== false
-          ? '<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">✓ 在名冊內</span>'
-          : '<span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-rose-50 text-rose-700 border border-rose-200">✗ 未在名冊</span>';
-
-        return `
-          <tr class="hover:bg-slate-50 transition ${!t.isQualifiedStep2 ? 'bg-slate-50/70 text-slate-400' : ''}">
-            <td class="p-3 text-slate-400 text-center font-mono">${idx + 1}</td>
-            <td class="p-3 font-bold text-slate-800">
-              ${t.name}
-              ${t.role.includes('校長') || t.role.includes('主管') ? '<span class="ml-1 text-[10px] bg-rose-100 text-rose-800 px-1 py-0.5 rounded font-bold">行政</span>' : ''}
-              ${t.role === '導師' ? `<span class="ml-1 text-[10px] bg-amber-100 text-amber-800 px-1 py-0.5 rounded font-bold">${t.homeroomClass ? t.homeroomClass + '導師' : '導師'}</span>` : ''}
-            </td>
-            <td class="p-3 text-slate-700">${t.subject}</td>
-            <td class="p-3">${rosterBadge}</td>
-            <td class="p-3">
-              <span class="px-2 py-0.5 rounded text-[11px] font-bold ${t.type === '長期代理' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-700'}">
-                ${t.type === '長期代理' ? '長期代理 (長代)' : t.type}
-              </span>
-            </td>
-            <td class="p-3 text-slate-600">${t.homeroomClass ? t.homeroomClass + '導師' : t.role}</td>
-            <td class="p-3">
-              ${t.isQualifiedStep2
-                ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${t.type === '長期代理' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-800'}">✓ 採計 (${t.type === '長期代理' ? '長代優先' : '專任正式'})</span>`
-                : `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">✗ 不採計 (${reasonLabel})</span>`}
-            </td>
-            <td class="p-3 text-center">
-              <button onclick="toggleStep3Teacher('${t.id}')" class="px-2.5 py-1 rounded text-xs font-bold ${t.isQualifiedStep2 ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">
-                ${t.isQualifiedStep2 ? '改為不採計' : '改為採計'}
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    }
-
     function goToStep4() {
+      applyGlobalStatusToClasses();
+
       schoolClasses.forEach(c => {
         const proxies = c.teachers.filter(t => t.isQualifiedStep2 && t.type === '長期代理');
         proxies.sort((a, b) => {
