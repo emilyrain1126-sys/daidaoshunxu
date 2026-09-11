@@ -1,0 +1,2059 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>智慧校務排代導輪值系統 (分班獨立排定版)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- SheetJS for Excel Reading and Writing -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- SortableJS for drag-and-drop table rows reordering -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Noto Sans TC', system-ui, -apple-system, sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .ghost-row {
+      opacity: 0.4;
+      background-color: #e0e7ff !important;
+    }
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printable-area, #printable-area * {
+        visibility: visible;
+      }
+      #printable-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-indigo-200 shadow-md">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-xl font-bold text-slate-900 tracking-tight">各班獨立排代導輪值系統</h1>
+            <span class="px-2 py-0.5 text-[11px] font-bold bg-indigo-100 text-indigo-800 rounded-full">分班獨立排定版</span>
+          </div>
+          <p class="text-xs text-slate-500 font-medium">每個班級獨立名冊：只有任課該班才能代該班 ➔ 排除行政與導師 ➔ 長代依國英數社自藝 ➔ 正式依年資(年資同則年紀輕優先)</p>
+        </div>
+      </div>
+
+      <!-- Reset and Quick Load Buttons -->
+      <div class="flex items-center space-x-2">
+        <button id="load-sample-btn" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition">
+          <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+          載入展示示範資料
+        </button>
+        <button id="reset-system-btn" class="inline-flex items-center px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+          重新開始
+        </button>
+      </div>
+    </div>
+
+    <!-- Stepper Navigation Bar -->
+    <div class="bg-slate-100/80 border-t border-slate-200 overflow-x-auto">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5">
+        <ol class="flex items-center justify-between text-xs font-medium min-w-[760px] gap-2" id="wizard-steps-container">
+          <li class="step-indicator flex-1 flex items-center space-x-2 text-indigo-600 font-semibold" data-step="1">
+            <span class="step-badge w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs">1</span>
+            <span class="step-title">匯入與解析各班配課</span>
+          </li>
+          <div class="w-6 h-0.5 bg-slate-300"></div>
+          <li class="step-indicator flex-1 flex items-center space-x-2 text-slate-400" data-step="2">
+            <span class="step-badge w-6 h-6 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-xs">2</span>
+            <span class="step-title">1. 各班任課審核</span>
+          </li>
+          <div class="w-6 h-0.5 bg-slate-300"></div>
+          <li class="step-indicator flex-1 flex items-center space-x-2 text-slate-400" data-step="3">
+            <span class="step-badge w-6 h-6 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-xs">3</span>
+            <span class="step-title">2. 排除該班導師/行政</span>
+          </li>
+          <div class="w-6 h-0.5 bg-slate-300"></div>
+          <li class="step-indicator flex-1 flex items-center space-x-2 text-slate-400" data-step="4">
+            <span class="step-badge w-6 h-6 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-xs">4</span>
+            <span class="step-title">3. 各班長代科別排序</span>
+          </li>
+          <div class="w-6 h-0.5 bg-slate-300"></div>
+          <li class="step-indicator flex-1 flex items-center space-x-2 text-slate-400" data-step="5">
+            <span class="step-badge w-6 h-6 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-xs">5</span>
+            <span class="step-title">4. 各班正式年資排序</span>
+          </li>
+          <div class="w-6 h-0.5 bg-slate-300"></div>
+          <li class="step-indicator flex-1 flex items-center space-x-2 text-slate-400" data-step="6">
+            <span class="step-badge w-6 h-6 rounded-full bg-slate-300 text-slate-700 flex items-center justify-center text-xs">6</span>
+            <span class="step-title">各班最終代導名冊</span>
+          </li>
+        </ol>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 flex flex-col">
+
+    <!-- Global Notice Banner -->
+    <div id="status-banner" class="mb-5 bg-indigo-50 border border-indigo-200 rounded-xl p-4 flex items-start space-x-3 text-indigo-900 text-sm">
+      <svg class="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div class="flex-1">
+        <span class="font-bold">分班排代導提示：</span>
+        <span id="banner-text">系統採用「班級獨立模式」，每個班級分開產生專屬輪值名冊。請上傳配課表、年資表與名冊表，或點右上角「載入展示示範資料」。</span>
+      </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- STEP 1: 匯入 3 個 Excel 檔案與班級整合 -->
+    <!-- ============================================================== -->
+    <section id="step-1-content" class="step-panel space-y-6">
+      <!-- 3 Excel Upload Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- File 1: 配課表 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-indigo-300 transition">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800">檔案 1：全校各班配課表</span>
+              <span class="text-xs text-slate-400 font-mono">.xlsx, .xls</span>
+            </div>
+            <h3 class="font-bold text-slate-800 text-sm">各班配課一覽表 / 任課表</h3>
+            <p class="text-xs text-slate-500 mt-1">用於規則 1：精準識別「每個班級」各自有哪些任課教師（支援矩陣排課表與清冊表）。</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100">
+            <label class="cursor-pointer inline-flex items-center justify-center w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition">
+              <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              選擇配課表 Excel
+              <input type="file" id="input-schedule-file" accept=".xlsx, .xls" class="hidden" />
+            </label>
+            <div id="file-schedule-status" class="mt-2 text-[11px] text-slate-500 text-center font-medium">尚未選取檔案</div>
+          </div>
+        </div>
+
+        <!-- File 2: 年資與職稱表 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-indigo-300 transition">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">檔案 2：年資與職稱表</span>
+              <span class="text-xs text-slate-400 font-mono">.xlsx, .xls</span>
+            </div>
+            <h3 class="font-bold text-slate-800 text-sm">教師年資積分與職務表</h3>
+            <p class="text-xs text-slate-500 mt-1">用於規則 2 與規則 5：比對現任職務（校長、主任、組長、導師）與正式教師年資及出生日期。</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100">
+            <label class="cursor-pointer inline-flex items-center justify-center w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition">
+              <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              選擇年資職稱 Excel
+              <input type="file" id="input-seniority-file" accept=".xlsx, .xls" class="hidden" />
+            </label>
+            <div id="file-seniority-status" class="mt-2 text-[11px] text-slate-500 text-center font-medium">尚未選取檔案</div>
+          </div>
+        </div>
+
+        <!-- File 3: 教職員名冊表 -->
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between hover:border-indigo-300 transition">
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800">檔案 3：教職員名冊表 (長代主要依據)</span>
+              <span class="text-xs text-slate-400 font-mono">.xlsx, .xls</span>
+            </div>
+            <h3 class="font-bold text-slate-800 text-sm">全校教職員名冊表</h3>
+            <p class="text-xs text-slate-500 mt-1">★ <span class="text-indigo-600 font-bold">長代身分以此檔案判定為最優先準則</span>（包含實缺、懸缺、代理教師、長代等聘別身分），判定最精確不易出錯。</p>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-100">
+            <label class="cursor-pointer inline-flex items-center justify-center w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition">
+              <svg class="w-4 h-4 mr-1.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+              選擇名冊 Excel
+              <input type="file" id="input-roster-file" accept=".xlsx, .xls" class="hidden" />
+            </label>
+            <div id="file-roster-status" class="mt-2 text-[11px] text-slate-500 text-center font-medium">尚未選取檔案</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Class Overview Cards -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <span>全校班級與各班師資整合清單</span>
+              <span id="class-badge-count" class="text-xs font-bold px-2 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-full">共 0 班</span>
+            </h2>
+            <p class="text-xs text-slate-500 mt-0.5">系統已自動從 Excel 表中分析出所有班級及該班任課教師名冊。每個班級的代導將各自獨立排定！</p>
+          </div>
+        </div>
+
+        <!-- Class Cards Grid -->
+        <div id="classes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 py-4">
+          <div class="col-span-full py-12 text-center text-slate-400 text-xs">
+            目前尚未匯入任何班級資料，請上傳配課表、年資表與名冊表，或點選右上角「載入展示示範資料」。
+          </div>
+        </div>
+
+        <!-- Step 1 Navigation Button -->
+        <div class="mt-4 flex items-center justify-end pt-4 border-t border-slate-100">
+          <button id="btn-goto-step-2" disabled class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition shadow-md shadow-indigo-100 flex items-center gap-2">
+            <span>進行第 1 步【各班任課老師審核】</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- STEP 2: 規則 1【只有任課該班的老師可以排該班代導】審核關卡 -->
+    <!-- ============================================================== -->
+    <section id="step-2-content" class="step-panel space-y-6 hidden">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 mb-1">
+              規則 1 審核：只有任課該班的老師可以排該班代導
+            </div>
+            <h2 class="text-lg font-bold text-slate-800">各班任課資格核對（按班級分開）</h2>
+            <p class="text-xs text-slate-500 mt-0.5">請切換下方班級標籤，核對各班之任課老師名冊。未在該班任課者不得列入該班代導名冊。</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span id="step2-class-summary" class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-700 rounded-lg">目前班級：—</span>
+          </div>
+        </div>
+
+        <!-- Class Selector Tabs -->
+        <div class="pt-3">
+          <label class="block text-xs font-bold text-slate-600 mb-2">請選擇要審查的班級：</label>
+          <div id="step2-class-tabs" class="flex flex-wrap gap-2 pb-2">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Table for current active class -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar max-h-[460px] mt-3">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 font-semibold sticky top-0 border-b border-slate-200 z-10">
+              <tr>
+                <th class="p-3 w-12 text-center">#</th>
+                <th class="p-3">教師姓名</th>
+                <th class="p-3">在該班任課科目</th>
+                <th class="p-3">任課節數</th>
+                <th class="p-3">教師身分</th>
+                <th class="p-3">現任職務</th>
+                <th class="p-3">規則 1 判定結果</th>
+                <th class="p-3 text-center w-36">手動覆核</th>
+              </tr>
+            </thead>
+            <tbody id="step2-tbody" class="divide-y divide-slate-100">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pt-3 flex justify-end items-center text-xs">
+          <span class="text-slate-400">💡 校長、行政主管與導師將在下一步被正式標註排除。</span>
+        </div>
+
+        <!-- Step 2 Navigation -->
+        <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-100">
+          <button id="btn-back-to-step-1" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+            ← 回上一步 (檔案匯入)
+          </button>
+          <button id="btn-goto-step-3" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
+            <span>各班任課審核無誤，進行第 2 步【排除行政與導師】</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- STEP 3: 規則 2【只有專任老師和長期代理老師排代導 (排除行政/導師)】 -->
+    <!-- ============================================================== -->
+    <section id="step-3-content" class="step-panel space-y-6 hidden">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 text-blue-800 mb-1">
+              規則 2 審核：只有專任老師和長期代理老師排代導
+            </div>
+            <h2 class="text-lg font-bold text-slate-800">各班身分資格審查（在此步驟正式排除「該班班導師」、「行政人員」）</h2>
+            <p class="text-xs text-slate-500 mt-0.5">系統依據規則自動排除校長、主任、組長與該班導師。您可切換各班確認合格名冊，亦可隨時手動修正。</p>
+          </div>
+          <div>
+            <span id="step3-class-summary" class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-700 rounded-lg">目前班級：—</span>
+          </div>
+        </div>
+
+        <!-- Class Selector Tabs -->
+        <div class="pt-3">
+          <label class="block text-xs font-bold text-slate-600 mb-2">請選擇要審核的班級：</label>
+          <div id="step3-class-tabs" class="flex flex-wrap gap-2 pb-2">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar max-h-[460px] mt-3">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 font-semibold sticky top-0 border-b border-slate-200 z-10">
+              <tr>
+                <th class="p-3 w-12 text-center">#</th>
+                <th class="p-3">姓名</th>
+                <th class="p-3">任課科目</th>
+                <th class="p-3">聘任身分</th>
+                <th class="p-3">現任職務</th>
+                <th class="p-3">規則 2 判定狀態</th>
+                <th class="p-3 text-center w-32">資格覆核</th>
+              </tr>
+            </thead>
+            <tbody id="step3-tbody" class="divide-y divide-slate-100">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Step 3 Navigation -->
+        <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-100">
+          <button id="btn-back-to-step-2" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+            ← 回上一步 (各班任課審核)
+          </button>
+          <button id="btn-goto-step-4" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
+            <span>身分資格確認無誤，進行第 3 步【各班長代科別排序】</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- STEP 4: 規則 3 & 4【代理排完才排正式；代理依國英數社自藝排序】 -->
+    <!-- ============================================================== -->
+    <section id="step-4-content" class="step-panel space-y-6 hidden">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 mb-1">
+              規則 3 & 4：長期代理教師依科目順位排序（代理排完才排正式）
+            </div>
+            <h2 class="text-lg font-bold text-slate-800">各班長期代理教師科別順位排定</h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+              各班科目優先順序：<span class="font-bold text-slate-800">1.國文 → 2.英文 → 3.數學 → 4.社會 → 5.自然 → 6.藝能科</span>。可切換班級並自由微調。
+            </p>
+          </div>
+          <div>
+            <span id="step4-class-summary" class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-700 rounded-lg">目前班級：—</span>
+          </div>
+        </div>
+
+        <!-- Class Selector Tabs -->
+        <div class="pt-3">
+          <label class="block text-xs font-bold text-slate-600 mb-2">請選擇要排序長代的班級：</label>
+          <div id="step4-class-tabs" class="flex flex-wrap gap-2 pb-2">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar max-h-[460px] mt-3">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 font-semibold sticky top-0 border-b border-slate-200 z-10">
+              <tr>
+                <th class="p-3 w-28 text-center">該班長代順位</th>
+                <th class="p-3">姓名</th>
+                <th class="p-3">科目分類</th>
+                <th class="p-3">任課科目</th>
+                <th class="p-3">年資</th>
+                <th class="p-3">排定說明</th>
+                <th class="p-3 text-center w-36">微調順序</th>
+              </tr>
+            </thead>
+            <tbody id="step4-tbody" class="divide-y divide-slate-100">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Step 4 Navigation -->
+        <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-100">
+          <button id="btn-back-to-step-3" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+            ← 回上一步 (身分審核)
+          </button>
+          <button id="btn-goto-step-5" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
+            <span>各班長代排序確認無誤，進行第 4 步【各班正式年資排序】</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- STEP 5: 規則 5【正式依年資排序，年資相同時年紀輕優先】 -->
+    <!-- ============================================================== -->
+    <section id="step-5-content" class="step-panel space-y-6 hidden">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 mb-1">
+              規則 5 審核：正式教師依年資排序（年資相同時年紀輕優先）
+            </div>
+            <h2 class="text-lg font-bold text-slate-800">各班專任正式教師年資排序</h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+              各班專任正式教師接續在長代之後。依年資排序；<span class="text-indigo-600 font-semibold">當年資完全相同時，系統自動以年紀較輕者優先排列</span>。
+            </p>
+          </div>
+          <div class="flex items-center space-x-3">
+            <span id="step5-class-summary" class="text-xs font-bold px-3 py-1 bg-slate-100 text-slate-700 rounded-lg">目前班級：—</span>
+            <div class="flex items-center space-x-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs">
+              <button id="seniority-asc-btn" class="px-2 py-1 rounded bg-white shadow-sm font-semibold text-indigo-700 border border-slate-200">
+                年資由淺到深 (低至高)
+              </button>
+              <button id="seniority-desc-btn" class="px-2 py-1 rounded text-slate-600 hover:text-slate-900">
+                年資由深到淺 (高至低)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Class Selector Tabs -->
+        <div class="pt-3">
+          <label class="block text-xs font-bold text-slate-600 mb-2">請選擇要排序專任正式的班級：</label>
+          <div id="step5-class-tabs" class="flex flex-wrap gap-2 pb-2">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar max-h-[460px] mt-3">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead class="bg-slate-50 text-slate-600 font-semibold sticky top-0 border-b border-slate-200 z-10">
+              <tr>
+                <th class="p-3 w-28 text-center">該班正式順位</th>
+                <th class="p-3">姓名</th>
+                <th class="p-3">任課科目</th>
+                <th class="p-3">年資 (年)</th>
+                <th class="p-3">出生年月日 / 年齡</th>
+                <th class="p-3">排定依據與年資比對</th>
+                <th class="p-3 text-center w-36">微調順序</th>
+              </tr>
+            </thead>
+            <tbody id="step5-tbody" class="divide-y divide-slate-100">
+              <!-- populated by JS -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Step 5 Navigation -->
+        <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-100">
+          <button id="btn-back-to-step-4" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+            ← 回上一步 (代理排序)
+          </button>
+          <button id="btn-goto-step-6" class="px-5 py-2.5 rounded-xl font-bold text-sm text-white bg-indigo-600 hover:bg-indigo-700 transition shadow-md shadow-indigo-100 flex items-center gap-2">
+            <span>年資排序無誤，產生【各班獨立代導總名冊】</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- STEP 6: 最終產出【各班獨立代導總輪值表】 -->
+    <!-- ============================================================== -->
+    <section id="step-6-content" class="step-panel space-y-6 hidden">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
+          <div>
+            <div class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-800 mb-1">
+              🎉 最終完成：各班獨立排定代導名冊
+            </div>
+            <h2 class="text-xl font-bold text-slate-900">115學年度 各班代課導師獨立輪值名冊</h2>
+            <p class="text-xs text-slate-500 mt-0.5">
+              每個班級均分開排定，完整體現：<span class="font-semibold text-slate-700">「任課該班」→「專任/長代」→「長代排完才排正式」→「長代依國英數社自藝」→「正式依年資(年資同則年紀輕優先)」</span>。
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <button id="export-excel-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              匯出分班 Excel 表 (.xlsx)
+            </button>
+            <button id="print-roster-btn" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition shadow-sm">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+              列印各班名冊
+            </button>
+          </div>
+        </div>
+
+        <!-- View Mode Switcher: Single Class View vs All Classes Grid View -->
+        <div class="flex items-center justify-between py-3 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <button id="view-mode-all-btn" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white">
+              全校序位總表 (同截圖格式)
+            </button>
+            <button id="view-mode-single-btn" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200">
+              單一班級深入檢視與微調
+            </button>
+          </div>
+          <div id="step6-single-selector-container" class="hidden flex items-center space-x-2">
+            <label class="text-xs font-bold text-slate-600">檢視班級：</label>
+            <select id="step6-class-select" class="border border-slate-300 rounded-lg px-2.5 py-1 text-xs bg-white font-semibold">
+              <!-- Rendered by JS -->
+            </select>
+          </div>
+        </div>
+
+        <!-- Container for printable / displayed roster -->
+        <div id="printable-area" class="py-4">
+          <!-- All Classes View (Matches user's screenshot format!) -->
+          <div id="step6-all-classes-view" class="overflow-x-auto border border-slate-300 rounded-xl custom-scrollbar shadow-sm bg-white">
+            <table class="w-full text-center text-xs border-collapse border border-slate-300" id="matrix-overview-table">
+              <tbody id="matrix-overview-tbody">
+                <!-- Rendered dynamically by JS in the exact 2-row format -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Single Class Detailed View (Hidden by default) -->
+          <div id="step6-single-class-view" class="hidden space-y-3">
+            <div class="p-4 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-between">
+              <div>
+                <h3 class="font-bold text-indigo-950 text-base" id="single-class-title">班級代導名冊</h3>
+                <p class="text-xs text-indigo-700 mt-0.5">您可以點選上下按鈕調整此班順序，調整結果將自動保存並反映在匯出的 Excel 中。</p>
+              </div>
+            </div>
+            <div class="overflow-x-auto border border-slate-200 rounded-xl custom-scrollbar max-h-[500px]">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead class="bg-slate-100 text-slate-700 font-bold sticky top-0 border-b border-slate-200 z-10">
+                  <tr>
+                    <th class="p-3 w-16 text-center">該班順位</th>
+                    <th class="p-3">輪值群組</th>
+                    <th class="p-3">教師姓名</th>
+                    <th class="p-3">在該班科目</th>
+                    <th class="p-3">身分聘別</th>
+                    <th class="p-3">年資</th>
+                    <th class="p-3">出生年次 / 年齡</th>
+                    <th class="p-3">排定依據說明</th>
+                    <th class="p-3 text-center w-28">順序微調</th>
+                  </tr>
+                </thead>
+                <tbody id="step6-single-tbody" class="divide-y divide-slate-200 font-normal">
+                  <!-- populated by JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 6 Navigation -->
+        <div class="mt-6 flex items-center justify-between pt-4 border-t border-slate-100">
+          <button id="btn-back-to-step-5" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 transition">
+            ← 回上一步 (各班年資微調)
+          </button>
+          <div class="text-xs text-slate-500">
+            名冊已全部排定！每個班級皆獨立分開，可直接下載 Excel 檔。
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Edit / Add Teacher to Specific Class Modal -->
+  <div id="class-teacher-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 mx-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <h3 class="font-bold text-slate-800 text-base" id="class-teacher-modal-title">手動指派任課教師至該班</h3>
+        <button onclick="closeClassTeacherModal()" class="text-slate-400 hover:text-slate-600">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="space-y-3.5 text-xs">
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">目標班級</label>
+          <input type="text" id="modal-target-class" class="w-full border border-slate-200 bg-slate-100 rounded-lg p-2 font-bold text-indigo-700" readonly />
+        </div>
+
+        <div>
+          <label class="block font-medium text-slate-700 mb-1">教師姓名</label>
+          <input type="text" id="modal-ct-name" placeholder="輸入教師姓名" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">在該班任課科目</label>
+            <input type="text" id="modal-ct-subject" placeholder="例如：國文、數學" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">科目分類</label>
+            <select id="modal-ct-category" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <option value="國文">國文</option>
+              <option value="英文">英文</option>
+              <option value="數學">數學</option>
+              <option value="社會">社會</option>
+              <option value="自然">自然</option>
+              <option value="藝能科">藝能科</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">教師身分</label>
+            <select id="modal-ct-type" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <option value="長期代理">長期代理 (長代)</option>
+              <option value="正式教師">正式教師</option>
+              <option value="兼課/鐘點">兼課/鐘點(不排)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">現任職務</label>
+            <select id="modal-ct-role" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+              <option value="專任教師">專任教師</option>
+              <option value="導師">導師 (排除)</option>
+              <option value="校長/兼行政主管">校長 / 兼行政主管 (排除)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">年資 (年)</label>
+            <input type="number" step="0.5" id="modal-ct-seniority" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" value="1" />
+          </div>
+          <div>
+            <label class="block font-medium text-slate-700 mb-1">出生年次 / 年齡</label>
+            <input type="text" id="modal-ct-birth" placeholder="如 82.05.20 或 33歲" class="w-full border border-slate-300 rounded-lg p-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none" />
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-end space-x-2">
+        <button onclick="closeClassTeacherModal()" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200">取消</button>
+        <button onclick="saveTeacherToClassModal()" class="px-4 py-1.5 rounded-lg text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700">儲存指派</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+  <script>
+    let currentStep = 1;
+    let senioritySortOrder = 'asc'; // 'asc': 低至高, 'desc': 高至低
+    let selectedClassId = ''; // 當前所選檢視班級
+    let step6ViewMode = 'all'; // 'all' or 'single'
+
+    // 科目分類優先度 (國 -> 英 -> 數 -> 社 -> 自 -> 藝)
+    const SUBJECT_CATEGORIES = {
+      '國文': { order: 1, label: '國文科', color: 'rose' },
+      '英文': { order: 2, label: '英文科', color: 'sky' },
+      '數學': { order: 3, label: '數學科', color: 'amber' },
+      '社會': { order: 4, label: '社會科', color: 'emerald' },
+      '自然': { order: 5, label: '自然科', color: 'teal' },
+      '藝能科': { order: 6, label: '藝能科', color: 'purple' }
+    };
+
+    let schoolClasses = [];
+    let globalTeacherMap = new Map();
+
+    // 增強型年齡/出生年月日解析器：值越大代表年紀越輕 (出生越晚)
+    function parseYoungnessScore(val) {
+      if (val === null || val === undefined) return 0;
+      if (val instanceof Date && !isNaN(val.getTime())) {
+        return val.getFullYear() * 10000 + (val.getMonth() + 1) * 100 + val.getDate();
+      }
+
+      const str = String(val).trim();
+      if (!str) return 0;
+
+      // 純年齡格式：如 "33歲" 或純數字小於 80 (若作為年齡)
+      const ageMatch = str.match(/^(\d{1,2})\s*歲?$/);
+      if (ageMatch && parseInt(ageMatch[1], 10) >= 20 && parseInt(ageMatch[1], 10) <= 75) {
+        const age = parseInt(ageMatch[1], 10);
+        return 2000000 - (age * 10000);
+      }
+
+      // Excel 日期序號 (20000 ~ 55000)
+      if (/^\d{5}$/.test(str)) {
+        const serial = parseInt(str, 10);
+        if (serial >= 15000 && serial <= 60000) {
+          const dt = new Date(Math.round((serial - 25569) * 86400 * 1000));
+          return dt.getFullYear() * 10000 + (dt.getMonth() + 1) * 100 + dt.getDate();
+        }
+      }
+
+      // 7碼或6碼純民國格式 (例如 0730921, 730921)
+      if (/^0?\d{6}$/.test(str)) {
+        const padStr = str.length === 6 ? '0' + str : str;
+        const rocYear = parseInt(padStr.substring(0, 3), 10);
+        const m = parseInt(padStr.substring(3, 5), 10);
+        const d = parseInt(padStr.substring(5, 7), 10);
+        return (rocYear + 1911) * 10000 + m * 100 + d;
+      }
+
+      // 民國格式：如 82.05.20、民國82年、82/5/20、82-05-20
+      const rocMatch = str.match(/(?:民國)?\s*(\d{2,3})[.\-\/年](\d{1,2})?(?:[.\-\/月](\d{1,2}))?/);
+      if (rocMatch) {
+        const rocYear = parseInt(rocMatch[1], 10);
+        if (rocYear < 130) {
+          const m = parseInt(rocMatch[2] || '1', 10);
+          const d = parseInt(rocMatch[3] || '1', 10);
+          return (rocYear + 1911) * 10000 + m * 100 + d;
+        }
+      }
+
+      // 西元格式：1993-05-20, 1993/5/20
+      const ceMatch = str.match(/^(19\d{2}|20\d{2})[.\-\/年](\d{1,2})?(?:[.\-\/月](\d{1,2}))?/);
+      if (ceMatch) {
+        const ceYear = parseInt(ceMatch[1], 10);
+        const m = parseInt(ceMatch[2] || '1', 10);
+        const d = parseInt(ceMatch[3] || '1', 10);
+        return ceYear * 10000 + m * 100 + d;
+      }
+
+      const numOnly = parseInt(str, 10);
+      if (!isNaN(numOnly)) {
+        if (numOnly >= 20 && numOnly <= 110) {
+          return (numOnly + 1911) * 10000;
+        } else if (numOnly > 1900 && numOnly < 2050) {
+          return numOnly * 10000;
+        }
+      }
+      return 0;
+    }
+
+    // 格式化為友善顯示的出生日期/年齡
+    function formatBirthDisplay(val) {
+      if (!val && val !== 0) return '';
+      if (val instanceof Date && !isNaN(val.getTime())) {
+        const roc = val.getFullYear() - 1911;
+        const m = String(val.getMonth() + 1).padStart(2, '0');
+        const d = String(val.getDate()).padStart(2, '0');
+        const age = new Date().getFullYear() - val.getFullYear();
+        return `${roc}.${m}.${d} (${age}歲)`;
+      }
+
+      const str = String(val).trim();
+      if (!str) return '';
+
+      // 檢查是否已包含歲
+      if (str.includes('歲')) return str;
+
+      const score = parseYoungnessScore(str);
+      if (score > 19000000) {
+        const ceYear = Math.floor(score / 10000);
+        const m = String(Math.floor((score % 10000) / 100)).padStart(2, '0');
+        const d = String(score % 100).padStart(2, '0');
+        const roc = ceYear - 1911;
+        const currentYear = new Date().getFullYear();
+        const age = currentYear - ceYear;
+        return `${roc}.${m}.${d} (${age}歲)`;
+      }
+
+      return str;
+    }
+
+    // 增強型身分別偵測：全面涵蓋「代理、長代、實缺、懸缺、三代」
+    function normalizeTeacherType(val = '', roleVal = '') {
+      const s = (String(val) + ' ' + String(roleVal)).trim();
+      if (/長代|代理|三代|代課|長期代理|實缺|懸缺|編制外/.test(s)) return '長期代理';
+      if (/兼課|鐘點|短代/.test(s)) return '兼課/鐘點';
+      if (/正式/.test(s)) return '正式教師';
+      return '正式教師';
+    }
+
+    function normalizeTeacherRole(val = '') {
+      const s = String(val).trim();
+      if (/校長/.test(s)) return '校長/兼行政主管';
+      if (/主任|組長|主管|主計|人事|行政|幹事|護理/.test(s)) return '校長/兼行政主管';
+      if (/導師|班導/.test(s)) return '導師';
+      if (/專任/.test(s)) return '專任教師';
+      return '專任教師';
+    }
+
+    function isValidTeacherName(val) {
+      if (!val) return false;
+      const s = String(val).trim();
+      if (!s) return false;
+      if (/^\d+(\.\d+)?$/.test(s)) return false;
+      if (/^[789一二三七八九]\d{0,2}班?$/.test(s)) return false;
+      if (/^[1-9]年\d{1,2}班?$/.test(s)) return false;
+      if (/^[國七八九][一二三四五六七八九]/.test(s) && /班$/.test(s)) return false;
+      if (/^(班級|年級|座號|序號|編號|代碼|科目|節數|每週節數|合計|總計|平均|備註|任課|教師|姓名|職稱|聘別|星期|時間|教室|未排|早修|午休|導師時間|彈性|社團|兼課|鐘點|課程|無|空白|代理導師序位表|班級順位)$/i.test(s)) return false;
+      if (s.length < 2 || s.length > 12) return false;
+      return true;
+    }
+
+    function cleanTeacherName(val) {
+      if (!val) return '';
+      return String(val)
+        .replace(/[\(（].*?[\)）]/g, '')
+        .replace(/[\*\×\+]\d+/g, '')
+        .trim();
+    }
+
+    function detectCategory(subjectName = '') {
+      const s = subjectName.trim();
+      if (!s) return '藝能科';
+      if (/國|國文|國語|閱讀|寫作/.test(s)) return '國文';
+      if (/英|英語|外語|雙語/.test(s)) return '英文';
+      if (/數|數學|幾何|代數/.test(s)) return '數學';
+      if (/社|歷史|地理|公民|社會探究|台灣史/.test(s)) return '社會';
+      if (/理|化|理化|生物|物理|化學|地科|自然|科學|生科/.test(s)) return '自然';
+      return '藝能科';
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      if (!container) return;
+      const toast = document.createElement('div');
+      const bgColors = {
+        success: 'bg-emerald-600 text-white',
+        error: 'bg-rose-600 text-white',
+        info: 'bg-slate-800 text-white'
+      };
+      toast.className = `pointer-events-auto px-4 py-2.5 rounded-xl shadow-lg text-xs font-semibold flex items-center space-x-2 transition transform duration-300 opacity-0 translate-y-2 ${bgColors[type] || bgColors.info}`;
+      toast.innerHTML = `
+        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>${msg}</span>
+      `;
+      container.appendChild(toast);
+      requestAnimationFrame(() => {
+        toast.classList.remove('opacity-0', 'translate-y-2');
+      });
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    function switchStep(targetStep) {
+      currentStep = targetStep;
+
+      document.querySelectorAll('.step-panel').forEach(panel => panel.classList.add('hidden'));
+      const activePanel = document.getElementById(`step-${targetStep}-content`);
+      if (activePanel) activePanel.classList.remove('hidden');
+
+      document.querySelectorAll('.step-indicator').forEach(indicator => {
+        const stepNum = parseInt(indicator.getAttribute('data-step'), 10);
+        const badge = indicator.querySelector('.step-badge');
+        if (stepNum === targetStep) {
+          indicator.className = 'step-indicator flex-1 flex items-center space-x-2 text-indigo-600 font-bold';
+          badge.className = 'step-badge w-6 h-6 rounded-full bg-indigo-600 text-white flex items-center justify-center text-xs shadow-sm';
+        } else if (stepNum < targetStep) {
+          indicator.className = 'step-indicator flex-1 flex items-center space-x-2 text-emerald-600 font-medium';
+          badge.className = 'step-badge w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center text-xs';
+        } else {
+          indicator.className = 'step-indicator flex-1 flex items-center space-x-2 text-slate-400';
+          badge.className = 'step-badge w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-xs';
+        }
+      });
+
+      const bannerText = document.getElementById('banner-text');
+      const hints = {
+        1: '步驟 1：匯入配課表、年資表與名冊表。系統已自動整合全校各班師資清單。',
+        2: '步驟 2 (規則 1)：各班任課審核。只有在該班有任課者才能排該班代導。',
+        3: '步驟 3 (規則 2)：各班身分審核。在此步驟排除該班班導師與行政主管。',
+        4: '步驟 4 (規則 3 & 4)：各班長期代理教師科別排序。依「國英數社自藝」順位排列。',
+        5: '步驟 5 (規則 5)：各班專任正式教師年資排序。依年資排序；年資相同時年紀輕者優先。',
+        6: '步驟 6：全校序位總表已完成！完全依據指定二列格式呈現，長代老師標以鮮明黃底。'
+      };
+      if (bannerText) bannerText.textContent = hints[targetStep] || '';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function loadSampleData() {
+      // 示範資料：完全對照截圖中的班級與教師姓名呈現
+      schoolClasses = [
+        {
+          className: '701',
+          classTeacher: '洪淑芬',
+          teachers: [
+            { id: 'c1_t1', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t2', name: '孔祥泰', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 2.0, birth: '85.10.12 (30歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t3', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t4', name: '陳嬿竹', subject: '歷史', category: '社會', type: '正式教師', role: '專任教師', seniority: 5.0, birth: '80.01.20 (35歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t5', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t6', name: '胡鈺敏', subject: '視覺藝術', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 7.0, birth: '77.08.05 (38歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t7', name: '王貞婷', subject: '生物', category: '自然', type: '正式教師', role: '專任教師', seniority: 8.0, birth: '76.11.23 (39歲)', hours: 3, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t8', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t9', name: '劉育如', subject: '童軍', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c1_t10', name: '鄭佳妍', subject: '健體', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 12.0, birth: '71.12.30 (44歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true }
+          ]
+        },
+        {
+          className: '702',
+          classTeacher: '曾志明',
+          teachers: [
+            { id: 'c2_t1', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t2', name: '黃泳淳', subject: '英語', category: '英文', type: '長期代理', role: '專任教師', seniority: 2.0, birth: '86.09.28 (29歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t3', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t4', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t5', name: '李柏勳', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 4.0, birth: '81.08.14 (34歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t6', name: '胡鈺敏', subject: '美勞', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 7.0, birth: '77.08.05 (38歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t7', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t8', name: '魏雅苓', subject: '理化', category: '自然', type: '正式教師', role: '專任教師', seniority: 9.5, birth: '73.02.26 (42歲)', hours: 3, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c2_t9', name: '劉育如', subject: '體育', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true }
+          ]
+        },
+        {
+          className: '703',
+          classTeacher: '張秋蘭',
+          teachers: [
+            { id: 'c3_t1', name: '施盈安', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '88.05.10 (27歲)', hours: 5, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t2', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t3', name: '李昭玲', subject: '英語', category: '英文', type: '長期代理', role: '專任教師', seniority: 2.0, birth: '86.11.03 (29歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t4', name: '陳天宇', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '85.02.14 (30歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t5', name: '許家家', subject: '社會', category: '社會', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '83.06.18 (32歲)', hours: 3, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t6', name: '孔祥泰', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 2.0, birth: '85.10.12 (30歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t7', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t8', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t9', name: '陳嬿竹', subject: '歷史', category: '社會', type: '正式教師', role: '專任教師', seniority: 5.0, birth: '80.01.20 (35歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t10', name: '胡鈺敏', subject: '美術', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 7.0, birth: '77.08.05 (38歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t11', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c3_t12', name: '劉育如', subject: '體育', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true }
+          ]
+        },
+        {
+          className: '704',
+          classTeacher: '黃偉芬',
+          teachers: [
+            { id: 'c4_t1', name: '林承瀚', subject: '國文', category: '國文', type: '長期代理', role: '專任教師', seniority: 1.0, birth: '87.06.15 (28歲)', hours: 5, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t2', name: '孔祥泰', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 2.0, birth: '85.10.12 (30歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t3', name: '李昭玲', subject: '英語', category: '英文', type: '長期代理', role: '專任教師', seniority: 2.0, birth: '86.11.03 (29歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t4', name: '許家家', subject: '社會', category: '社會', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '83.06.18 (32歲)', hours: 3, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t5', name: '陳天宇', subject: '數學', category: '數學', type: '正式教師', role: '專任教師', seniority: 1.5, birth: '85.02.14 (30歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t6', name: '黃偉芬', subject: '國文(導師)', category: '國文', type: '正式教師', role: '導師', seniority: 5.0, birth: '80.09.12 (35歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: false },
+            { id: 'c4_t7', name: '吳家蓉', subject: '生活科技', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 6.0, birth: '79.03.11 (36歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t8', name: '蔡颯娟', subject: '英語', category: '英文', type: '正式教師', role: '專任教師', seniority: 3.0, birth: '82.04.18 (33歲)', hours: 4, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t9', name: '陳嬿竹', subject: '歷史', category: '社會', type: '正式教師', role: '專任教師', seniority: 5.0, birth: '80.01.20 (35歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t10', name: '徐雪茹', subject: '地理', category: '社會', type: '正式教師', role: '專任教師', seniority: 9.0, birth: '74.05.19 (41歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t11', name: '劉育如', subject: '體育', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 10.0, birth: '73.07.02 (42歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true },
+            { id: 'c4_t12', name: '張淑珍', subject: '家政', category: '藝能科', type: '正式教師', role: '專任教師', seniority: 15.0, birth: '68.03.14 (47歲)', hours: 2, hasTeaching: true, isQualifiedStep1: true, isQualifiedStep2: true }
+          ]
+        }
+      ];
+
+      selectedClassId = schoolClasses[0].className;
+      renderClassesOverview();
+      document.getElementById('file-schedule-status').innerHTML = '<span class="text-emerald-600 font-semibold">✓ 示範檔 1 (配課表) 已載入 4 個班級</span>';
+      document.getElementById('file-seniority-status').innerHTML = '<span class="text-emerald-600 font-semibold">✓ 示範檔 2 (年資表) 已就緒</span>';
+      document.getElementById('file-roster-status').innerHTML = '<span class="text-emerald-600 font-semibold">✓ 示範檔 3 (名冊表) 已就緒</span>';
+      document.getElementById('btn-goto-step-2').removeAttribute('disabled');
+      showToast('已載入 701～704 示範資料！已包含長代黃底與年資/年齡完整排定。', 'success');
+    }
+
+    function handleScheduleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+          parseClassesFromSchedule(json);
+          document.getElementById('file-schedule-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})</span>`;
+          showToast(`配課表解析成功！已擷取各班級師資。`, 'success');
+        } catch (err) {
+          console.error(err);
+          showToast('配課表解析失敗，請確認檔案格式！', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function handleSeniorityFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+          parseSeniorityTable(json);
+          document.getElementById('file-seniority-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})</span>`;
+          showToast(`教師年資職稱表載入成功！已更新全校師資年資庫。`, 'success');
+        } catch (err) {
+          console.error(err);
+          showToast('年資職稱表解析失敗！', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function handleRosterExcelFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (evt) {
+        try {
+          const data = new Uint8Array(evt.target.result);
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+          parseRosterTable(json);
+          document.getElementById('file-roster-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})</span>`;
+          showToast(`教職員名冊表載入成功！已更新聘任身分庫。`, 'success');
+        } catch (err) {
+          console.error(err);
+          showToast('名冊表解析失敗！', 'error');
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function parseSeniorityTable(rows) {
+      if (!rows || rows.length === 0) return;
+      let nameCol = -1, senCol = -1, roleCol = -1, typeCol = -1, birthCol = -1;
+      let headerRowIndex = 0;
+
+      for (let r = 0; r < Math.min(rows.length, 15); r++) {
+        const row = rows[r];
+        if (!Array.isArray(row)) continue;
+        row.forEach((cell, idx) => {
+          const val = String(cell || '').trim();
+          if (/姓名|教師姓名|教職員|名字/.test(val) && !/班級|代號|科目/.test(val) && nameCol === -1) {
+            nameCol = idx;
+            headerRowIndex = r;
+          }
+          if (/年資|積分|年數|服務年資/.test(val) && senCol === -1) senCol = idx;
+          if (/職稱|現任職務|職務/.test(val) && roleCol === -1) roleCol = idx;
+          if (/身分|聘別|類別|代理|長代/.test(val) && typeCol === -1) typeCol = idx;
+          if (/出生|生日|年齡|出生年|年次|出生日期|出生年月日/.test(val) && birthCol === -1) birthCol = idx;
+        });
+        if (nameCol !== -1 && (senCol !== -1 || birthCol !== -1)) break;
+      }
+
+      if (nameCol === -1) nameCol = 0;
+      if (senCol === -1) senCol = 1;
+
+      for (let r = headerRowIndex + 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row) continue;
+        const rawName = String(row[nameCol] || '').trim();
+        const teacherName = cleanTeacherName(rawName);
+        if (!isValidTeacherName(teacherName)) continue;
+
+        const sen = parseFloat(row[senCol]) || 0;
+        const rawRole = roleCol !== -1 ? String(row[roleCol] || '') : '';
+        const rawType = typeCol !== -1 ? String(row[typeCol] || '') : '';
+        const role = normalizeTeacherRole(rawRole);
+        const type = normalizeTeacherType(rawType, rawRole);
+
+        let birth = '';
+        if (birthCol !== -1 && row[birthCol] !== undefined) {
+          birth = formatBirthDisplay(row[birthCol]);
+        }
+
+        const existing = globalTeacherMap.get(teacherName) || {};
+        globalTeacherMap.set(teacherName, {
+          ...existing,
+          seniority: sen !== 0 ? sen : (existing.seniority || 0),
+          role: role || existing.role || '專任教師',
+          type: type === '長期代理' ? '長期代理' : (existing.type || type),
+          birth: birth || existing.birth || ''
+        });
+      }
+
+      applyGlobalMapToClasses();
+      renderClassesOverview();
+    }
+
+    function parseRosterTable(rows) {
+      if (!rows || rows.length === 0) return;
+      let nameCol = -1, typeCol = -1, roleCol = -1, subCol = -1, birthCol = -1, noteCol = -1;
+      let headerRowIndex = 0;
+
+      for (let r = 0; r < Math.min(rows.length, 15); r++) {
+        const row = rows[r];
+        if (!Array.isArray(row)) continue;
+        row.forEach((cell, idx) => {
+          const val = String(cell || '').trim();
+          if (/姓名|教師姓名|教職員/.test(val) && !/班級|代號/.test(val) && nameCol === -1) {
+            nameCol = idx;
+            headerRowIndex = r;
+          }
+          if (/身分|聘別|類別|代理|教師身分|任用/.test(val) && typeCol === -1) typeCol = idx;
+          if (/職稱|現任職務|職務/.test(val) && roleCol === -1) roleCol = idx;
+          if (/科別|科目|領域|專長/.test(val) && subCol === -1) subCol = idx;
+          if (/出生|生日|年齡|出生年|年次|出生日期|出生年月日/.test(val) && birthCol === -1) birthCol = idx;
+          if (/備註|說明/.test(val) && noteCol === -1) noteCol = idx;
+        });
+        if (nameCol !== -1 && (typeCol !== -1 || birthCol !== -1 || roleCol !== -1)) break;
+      }
+
+      if (nameCol === -1) nameCol = 0;
+
+      for (let r = headerRowIndex + 1; r < rows.length; r++) {
+        const row = rows[r];
+        if (!row) continue;
+        const rawName = String(row[nameCol] || '').trim();
+        const teacherName = cleanTeacherName(rawName);
+        if (!isValidTeacherName(teacherName)) continue;
+
+        const rawType = typeCol !== -1 ? String(row[typeCol] || '') : '';
+        const rawRole = roleCol !== -1 ? String(row[roleCol] || '') : '';
+        const rawNote = noteCol !== -1 ? String(row[noteCol] || '') : '';
+        
+        // 長代從教師名冊抓：深度比對聘別、職稱與備註欄位
+        const combinedText = `${rawType} ${rawRole} ${rawNote}`;
+        let isProxy = /代理|長代|三代|代課|實缺|懸缺|編制外|定期契約/.test(combinedText);
+        let type = isProxy ? '長期代理' : (normalizeTeacherType(rawType, rawRole));
+        let role = normalizeTeacherRole(rawRole);
+
+        let birth = '';
+        if (birthCol !== -1 && row[birthCol] !== undefined) {
+          birth = formatBirthDisplay(row[birthCol]);
+        }
+
+        const subject = subCol !== -1 ? String(row[subCol] || '').trim() : '';
+
+        const existing = globalTeacherMap.get(teacherName) || {};
+        globalTeacherMap.set(teacherName, {
+          ...existing,
+          type: type, // 以名冊表為最高權威依據
+          fromRoster: true, // 標記為名冊來源
+          role: role || existing.role || '專任教師',
+          birth: birth || existing.birth || '',
+          defaultSubject: subject || existing.defaultSubject || ''
+        });
+      }
+
+      applyGlobalMapToClasses();
+      renderClassesOverview();
+    }
+
+    function applyGlobalMapToClasses() {
+      schoolClasses.forEach(c => {
+        c.teachers.forEach(t => {
+          const g = globalTeacherMap.get(t.name);
+          if (g) {
+            if (g.seniority !== undefined && g.seniority !== 0) t.seniority = g.seniority;
+            // 教師名冊表的身分具有最高優先權
+            if (g.fromRoster || g.type) t.type = g.type;
+            if (g.role) t.role = g.role;
+            if (g.birth) t.birth = g.birth;
+          }
+        });
+      });
+    }
+
+    function parseClassesFromSchedule(rows) {
+      if (!rows || rows.length === 0) return;
+
+      let matrixHeaderRow = -1;
+      let subjectCols = [];
+      let classColIdx = -1;
+
+      for (let r = 0; r < Math.min(rows.length, 12); r++) {
+        const row = rows[r];
+        if (!Array.isArray(row)) continue;
+        let foundSubjects = [];
+        row.forEach((cell, idx) => {
+          const val = String(cell || '').trim();
+          if (/(國文|國語|英語|英文|數學|理化|生物|物理|化學|歷史|地理|公民|社會|自然|體育|音樂|視覺|美勞|美術|家政|童軍|資訊|科技|健體|健康|輔導|導師)/.test(val)) {
+            foundSubjects.push({ colIdx: idx, subjectName: val });
+          }
+          if (/班級|班號|年班/.test(val) && classColIdx === -1) classColIdx = idx;
+        });
+
+        if (foundSubjects.length >= 3) {
+          matrixHeaderRow = r;
+          subjectCols = foundSubjects;
+          break;
+        }
+      }
+
+      if (matrixHeaderRow !== -1 && subjectCols.length >= 3) {
+        if (classColIdx === -1) classColIdx = 0;
+        const newClasses = [];
+
+        for (let r = matrixHeaderRow + 1; r < rows.length; r++) {
+          const row = rows[r];
+          if (!Array.isArray(row)) continue;
+          const rawClassName = String(row[classColIdx] || '').trim();
+          if (!rawClassName || /^(合計|平均|備註)/.test(rawClassName)) continue;
+
+          let targetClass = newClasses.find(c => c.className === rawClassName);
+          if (!targetClass) {
+            targetClass = { className: rawClassName, classTeacher: '', teachers: [] };
+            newClasses.push(targetClass);
+          }
+
+          subjectCols.forEach(sc => {
+            const rawCell = String(row[sc.colIdx] || '').trim();
+            if (!rawCell) return;
+            const teacherName = cleanTeacherName(rawCell);
+            if (!isValidTeacherName(teacherName)) return;
+
+            const isClassTeacher = /導師/.test(sc.subjectName);
+            const actualSubject = isClassTeacher ? '導師任課' : sc.subjectName;
+
+            if (isClassTeacher) targetClass.classTeacher = teacherName;
+
+            let existingTeacher = targetClass.teachers.find(t => t.name === teacherName);
+            if (!existingTeacher) {
+              const g = globalTeacherMap.get(teacherName) || {};
+              targetClass.teachers.push({
+                id: `ct_${targetClass.className}_${Math.random().toString(36).substr(2, 6)}`,
+                name: teacherName,
+                subject: actualSubject,
+                category: detectCategory(actualSubject),
+                type: g.type || '正式教師',
+                role: isClassTeacher ? '導師' : (g.role || '專任教師'),
+                seniority: g.seniority || 1.0,
+                birth: g.birth || '',
+                hours: 4,
+                hasTeaching: true,
+                isQualifiedStep1: true,
+                isQualifiedStep2: !isClassTeacher && (g.role !== '校長/兼行政主管')
+              });
+            } else {
+              existingTeacher.hours = (existingTeacher.hours || 0) + 2;
+              if (isClassTeacher) existingTeacher.role = '導師';
+            }
+          });
+        }
+
+        if (newClasses.length > 0) {
+          schoolClasses = newClasses;
+          selectedClassId = schoolClasses[0].className;
+          renderClassesOverview();
+          document.getElementById('btn-goto-step-2').removeAttribute('disabled');
+          return;
+        }
+      }
+
+      // 直式清冊模式
+      let classCol = -1, nameCol = -1, subCol = -1;
+      for (let r = 0; r < Math.min(rows.length, 6); r++) {
+        const row = rows[r];
+        if (!Array.isArray(row)) continue;
+        row.forEach((cell, idx) => {
+          const val = String(cell || '').trim();
+          if (/班級|年班/.test(val) && classCol === -1) classCol = idx;
+          if (/教師|姓名|老師/.test(val) && !/班級/.test(val) && nameCol === -1) nameCol = idx;
+          if (/科目|領域|課程/.test(val) && subCol === -1) subCol = idx;
+        });
+      }
+
+      if (classCol !== -1 && nameCol !== -1) {
+        const classMap = new Map();
+        for (let r = 1; r < rows.length; r++) {
+          const row = rows[r];
+          if (!row) continue;
+          const cName = String(row[classCol] || '').trim();
+          const tName = cleanTeacherName(row[nameCol]);
+          if (!cName || !isValidTeacherName(tName)) continue;
+
+          const sub = subCol !== -1 ? String(row[subCol] || '一般科目').trim() : '一般科目';
+          if (!classMap.has(cName)) classMap.set(cName, []);
+
+          const teachers = classMap.get(cName);
+          if (!teachers.find(t => t.name === tName)) {
+            const g = globalTeacherMap.get(tName) || {};
+            teachers.push({
+              id: `ct_${cName}_${Math.random().toString(36).substr(2, 6)}`,
+              name: tName,
+              subject: sub,
+              category: detectCategory(sub),
+              type: g.type || '正式教師',
+              role: g.role || '專任教師',
+              seniority: g.seniority || 1.0,
+              birth: g.birth || '',
+              hours: 4,
+              hasTeaching: true,
+              isQualifiedStep1: true,
+              isQualifiedStep2: g.role !== '校長/兼行政主管' && g.role !== '導師'
+            });
+          }
+        }
+
+        schoolClasses = [];
+        classMap.forEach((teachers, cName) => {
+          schoolClasses.push({
+            className: cName,
+            classTeacher: '',
+            teachers: teachers
+          });
+        });
+
+        if (schoolClasses.length > 0) {
+          selectedClassId = schoolClasses[0].className;
+          renderClassesOverview();
+          document.getElementById('btn-goto-step-2').removeAttribute('disabled');
+        }
+      }
+    }
+
+    function renderClassesOverview() {
+      const container = document.getElementById('classes-grid');
+      const badgeCount = document.getElementById('class-badge-count');
+      const nextBtn = document.getElementById('btn-goto-step-2');
+
+      if (!container) return;
+
+      badgeCount.textContent = `共 ${schoolClasses.length} 班`;
+
+      if (schoolClasses.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-12 text-center text-slate-400 text-xs">
+            目前尚未匯入任何班級資料，請上傳配課表、年資表與名冊表，或點選右上角「載入展示示範資料」。
+          </div>
+        `;
+        nextBtn.setAttribute('disabled', 'true');
+        return;
+      }
+
+      nextBtn.removeAttribute('disabled');
+
+      container.innerHTML = schoolClasses.map((c, idx) => {
+        const proxyCount = c.teachers.filter(t => t.type === '長期代理').length;
+        const formalCount = c.teachers.filter(t => t.type === '正式教師' && t.role === '專任教師').length;
+        const otherCount = c.teachers.length - proxyCount - formalCount;
+
+        return `
+          <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 hover:border-indigo-300 transition">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-200">
+              <div class="flex items-center space-x-2">
+                <span class="w-7 h-7 rounded-lg bg-indigo-600 text-white font-bold text-xs flex items-center justify-center">${idx + 1}</span>
+                <h4 class="font-bold text-slate-800 text-base">${c.className} 班</h4>
+              </div>
+              <span class="text-xs font-semibold px-2 py-0.5 bg-white border border-slate-200 text-slate-700 rounded-md">
+                ${c.teachers.length} 位任課師資
+              </span>
+            </div>
+            <div class="mt-3 text-xs space-y-1 text-slate-600">
+              <div class="flex justify-between">
+                <span>長期代理 (長代)：</span>
+                <span class="font-bold text-amber-600 bg-amber-50 px-1 rounded border border-amber-200">${proxyCount} 人 (鮮黃底標註)</span>
+              </div>
+              <div class="flex justify-between">
+                <span>專任正式教師：</span>
+                <span class="font-bold text-emerald-700">${formalCount} 人</span>
+              </div>
+              <div class="flex justify-between text-slate-400">
+                <span>導師/行政主管：</span>
+                <span>${otherCount} 人</span>
+              </div>
+            </div>
+            <div class="mt-3 pt-2 border-t border-slate-200 flex justify-end">
+              <button onclick="quickJumpToClass('${c.className}')" class="text-xs text-indigo-600 font-bold hover:underline">
+                檢視此班代導排定流程 →
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function quickJumpToClass(cName) {
+      selectedClassId = cName;
+      goToStep2();
+    }
+
+    function goToStep2() {
+      if (schoolClasses.length === 0) {
+        showToast('請先載入班級與配課資料！', 'error');
+        return;
+      }
+      if (!selectedClassId && schoolClasses.length > 0) {
+        selectedClassId = schoolClasses[0].className;
+      }
+      renderStep2Tabs();
+      renderStep2Table();
+      switchStep(2);
+      showToast(`已進入第 1 步【各班任課審核】！正檢視 ${selectedClassId} 班。`, 'info');
+    }
+
+    function renderStep2Tabs() {
+      const container = document.getElementById('step2-class-tabs');
+      if (!container) return;
+      container.innerHTML = schoolClasses.map(c => `
+        <button onclick="selectStep2Class('${c.className}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${c.className === selectedClassId ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+          ${c.className} 班 (${c.teachers.length}人)
+        </button>
+      `).join('');
+      document.getElementById('step2-class-summary').textContent = `目前班級：${selectedClassId} 班`;
+    }
+
+    function selectStep2Class(cName) {
+      selectedClassId = cName;
+      renderStep2Tabs();
+      renderStep2Table();
+    }
+
+    function toggleStep2Teacher(id) {
+      const currentClass = schoolClasses.find(c => c.className === selectedClassId);
+      if (!currentClass) return;
+      const teacher = currentClass.teachers.find(t => t.id === id);
+      if (!teacher) return;
+      teacher.isQualifiedStep1 = !teacher.isQualifiedStep1;
+      renderStep2Table();
+      showToast(`已切換 ${teacher.name} 在 ${selectedClassId} 班之任課狀態為：${teacher.isQualifiedStep1 ? '【有任課】' : '【無任課】'}`);
+    }
+
+    function renderStep2Table() {
+      const tbody = document.getElementById('step2-tbody');
+      if (!tbody) return;
+      const currentClass = schoolClasses.find(c => c.className === selectedClassId);
+      if (!currentClass || !currentClass.teachers) {
+        tbody.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-slate-400">查無此班級資料。</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = currentClass.teachers.map((t, idx) => `
+        <tr class="hover:bg-slate-50 transition ${!t.isQualifiedStep1 ? 'bg-slate-50/70 text-slate-400' : ''}">
+          <td class="p-3 text-slate-400 text-center font-mono">${idx + 1}</td>
+          <td class="p-3 font-bold text-slate-800">
+            ${t.name}
+            ${t.role.includes('校長') || t.role.includes('主管') ? '<span class="ml-1 text-[10px] bg-rose-100 text-rose-800 px-1 py-0.5 rounded font-bold">行政</span>' : ''}
+            ${t.role === '導師' ? '<span class="ml-1 text-[10px] bg-amber-100 text-amber-800 px-1 py-0.5 rounded font-bold">導師</span>' : ''}
+          </td>
+          <td class="p-3 text-slate-700 font-medium">${t.subject}</td>
+          <td class="p-3 text-slate-600">${t.hours || 0} 節</td>
+          <td class="p-3">
+            <span class="px-2 py-0.5 rounded text-[11px] font-bold ${t.type === '長期代理' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-700'}">
+              ${t.type === '長期代理' ? '長期代理 (長代)' : t.type}
+            </span>
+          </td>
+          <td class="p-3 text-slate-600">${t.role}</td>
+          <td class="p-3">
+            ${t.isQualifiedStep1
+              ? '<span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">✓ 有任課該班 (符合規則1)</span>'
+              : '<span class="text-xs font-semibold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded">未任課該班</span>'}
+          </td>
+          <td class="p-3 text-center">
+            <button onclick="toggleStep2Teacher('${t.id}')" class="px-2.5 py-1 rounded text-xs font-bold ${t.isQualifiedStep1 ? 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-300' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">
+              ${t.isQualifiedStep1 ? '切換為未任課' : '切換為有任課'}
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function goToStep3() {
+      schoolClasses.forEach(c => {
+        c.teachers.forEach(t => {
+          const isRoleOk = (t.role === '專任教師') && (t.type === '長期代理' || t.type === '正式教師');
+          t.isQualifiedStep2 = Boolean(t.isQualifiedStep1 && isRoleOk);
+        });
+      });
+
+      renderStep3Tabs();
+      renderStep3Table();
+      switchStep(3);
+      showToast('已進入第 2 步【排除行政主管與導師】！', 'info');
+    }
+
+    function renderStep3Tabs() {
+      const container = document.getElementById('step3-class-tabs');
+      if (!container) return;
+      container.innerHTML = schoolClasses.map(c => `
+        <button onclick="selectStep3Class('${c.className}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${c.className === selectedClassId ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+          ${c.className} 班
+        </button>
+      `).join('');
+      document.getElementById('step3-class-summary').textContent = `目前班級：${selectedClassId} 班`;
+    }
+
+    function selectStep3Class(cName) {
+      selectedClassId = cName;
+      renderStep3Tabs();
+      renderStep3Table();
+    }
+
+    function toggleStep3Teacher(id) {
+      const currentClass = schoolClasses.find(c => c.className === selectedClassId);
+      if (!currentClass) return;
+      const teacher = currentClass.teachers.find(t => t.id === id);
+      if (!teacher) return;
+      teacher.isQualifiedStep2 = !teacher.isQualifiedStep2;
+      renderStep3Table();
+      showToast(`已切換 ${teacher.name} 資格為：${teacher.isQualifiedStep2 ? '【合格排代導】' : '【排除不排】'}`);
+    }
+
+    function renderStep3Table() {
+      const tbody = document.getElementById('step3-tbody');
+      if (!tbody) return;
+      const currentClass = schoolClasses.find(c => c.className === selectedClassId);
+      if (!currentClass || !currentClass.teachers) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">查無此班級資料。</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = currentClass.teachers.map((t, idx) => {
+        let reasonLabel = '';
+        if (!t.isQualifiedStep2) {
+          if (t.role.includes('校長') || t.role.includes('主管')) reasonLabel = '校長/行政主管排除';
+          else if (t.role === '導師') reasonLabel = '導師身分排除';
+          else if (!t.isQualifiedStep1) reasonLabel = '無任課該班排除';
+          else reasonLabel = '身分別不符';
+        }
+
+        return `
+          <tr class="hover:bg-slate-50 transition ${!t.isQualifiedStep2 ? 'bg-slate-50/70 text-slate-400' : ''}">
+            <td class="p-3 text-slate-400 text-center font-mono">${idx + 1}</td>
+            <td class="p-3 font-bold text-slate-800">
+              ${t.name}
+              ${t.role.includes('校長') || t.role.includes('主管') ? '<span class="ml-1 text-[10px] bg-rose-100 text-rose-800 px-1 py-0.5 rounded font-bold">行政</span>' : ''}
+              ${t.role === '導師' ? '<span class="ml-1 text-[10px] bg-amber-100 text-amber-800 px-1 py-0.5 rounded font-bold">導師</span>' : ''}
+            </td>
+            <td class="p-3 text-slate-700">${t.subject}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[11px] font-bold ${t.type === '長期代理' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-slate-100 text-slate-700'}">
+                ${t.type === '長期代理' ? '長期代理 (長代)' : t.type}
+              </span>
+            </td>
+            <td class="p-3 text-slate-600">${t.role}</td>
+            <td class="p-3">
+              ${t.isQualifiedStep2
+                ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold ${t.type === '長期代理' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-800'}">✓ 合格排代導 (${t.type === '長期代理' ? '長代優先' : '正式'})</span>`
+                : `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-rose-100 text-rose-800">✗ 排除 (${reasonLabel})</span>`}
+            </td>
+            <td class="p-3 text-center">
+              <button onclick="toggleStep3Teacher('${t.id}')" class="px-2.5 py-1 rounded text-xs font-bold ${t.isQualifiedStep2 ? 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}">
+                ${t.isQualifiedStep2 ? '改為排除' : '改為合格'}
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function goToStep4() {
+      schoolClasses.forEach(c => {
+        const proxies = c.teachers.filter(t => t.isQualifiedStep2 && t.type === '長期代理');
+        proxies.sort((a, b) => {
+          const catA = SUBJECT_CATEGORIES[a.category]?.order || 99;
+          const catB = SUBJECT_CATEGORIES[b.category]?.order || 99;
+          if (catA !== catB) return catA - catB;
+          return (b.seniority || 0) - (a.seniority || 0);
+        });
+        c.proxySorted = proxies;
+      });
+
+      renderStep4Tabs();
+      renderStep4Table();
+      switchStep(4);
+      showToast('已進入第 3 步【各班長代教師科別排序】！', 'info');
+    }
+
+    function renderStep4Tabs() {
+      const container = document.getElementById('step4-class-tabs');
+      if (!container) return;
+      container.innerHTML = schoolClasses.map(c => `
+        <button onclick="selectStep4Class('${c.className}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${c.className === selectedClassId ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+          ${c.className} 班 (${(c.proxySorted || []).length}位長代)
+        </button>
+      `).join('');
+      document.getElementById('step4-class-summary').textContent = `目前班級：${selectedClassId} 班`;
+    }
+
+    function selectStep4Class(cName) {
+      selectedClassId = cName;
+      renderStep4Tabs();
+      renderStep4Table();
+    }
+
+    function moveStep4Item(index, direction) {
+      const currentClass = schoolClasses.find(c => c.className === selectedClassId);
+      if (!currentClass || !currentClass.proxySorted) return;
+      const list = currentClass.proxySorted;
+      const newIdx = index + direction;
+      if (newIdx < 0 || newIdx >= list.length) return;
+      const temp = list[index];
+      list[index] = list[newIdx];
+      list[newIdx] = temp;
+      renderStep4Table();
+    }
+
+    function renderStep4Table() {
+      const tbody = document.getElementById('step4-tbody');
+      if (!tbody) return;
+      const currentClass = schoolClasses.find(c => c.className === selectedClassId);
+      if (!currentClass || !currentClass.proxySorted || currentClass.proxySorted.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">${selectedClassId} 班無任課之長期代理 (長代) 教師。</td></tr>`;
+        return;
+      }
+
+      const badgeColors = {
+        '國文': 'bg-rose-100 text-rose-800 border-rose-200',
+        '英文': 'bg-sky-100 text-sky-800 border-sky-200',
+        '數學': 'bg-amber-100 text-amber-800 border-amber-200',
+        '社會': 'bg-emerald-100 text-emerald-800 border-emerald-200',
+        '自然': 'bg-teal-100 text-teal-800 border-teal-200',
+        '藝能科': 'bg-purple-100 text-purple-800 border-purple-200'
+      };
+
+      tbody.innerHTML = currentClass.proxySorted.map((t, idx) => `
+        <tr class="hover:bg-amber-50/40 transition bg-amber-50/20">
+          <td class="p-3 text-center font-bold text-amber-900 bg-amber-100/60 font-mono">長代第 ${idx + 1} 順位</td>
+          <td class="p-3 font-bold text-slate-800">${t.name}</td>
+          <td class="p-3">
+            <span class="px-2.5 py-1 rounded-full text-xs font-bold border ${badgeColors[t.category] || 'bg-slate-100 text-slate-700'}">
+              ${SUBJECT_CATEGORIES[t.category]?.order || '•'}. ${t.category}
+            </span>
+          </td>
+          <td class="p-3 text-slate-700">${t.subject}</td>
+          <td class="p-3 text-slate-600">${t.seniority || 1} 年</td>
+          <td class="p-3 text-xs text-slate-500">該班長代：依科別順位排定</td>
+          <td class="p-3 text-center space-x-1">
+            <button onclick="moveStep4Item(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-bold">↑ 上移</button>
+            <button onclick="moveStep4Item(${idx}, 1)" ${idx === currentClass.proxySorted.length - 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-bold">↓ 下移</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function goToStep5() {
+      schoolClasses.forEach(c => {
+        const formals = c.teachers.filter(t => t.isQualifiedStep2 && t.type === '正式教師');
+        c.formalSorted = sortFormalTeachers(formals);
+      });
+
+      renderStep5Tabs();
+      renderStep5Table();
+      switchStep(5);
+      showToast('已進入第 4 步【各班專任正式年資排序】！', 'info');
+    }
+
+    function sortFormalTeachers(list) {
+      return [...list].sort((a, b) => {
+        const senA = parseFloat(a.seniority) || 0;
+        const senB = parseFloat(b.seniority) || 0;
+        const diff = senioritySortOrder === 'asc' ? senA - senB : senB - senA;
+        if (Math.abs(diff) > 0.001) return diff;
+
+        // 年資相同時，年紀輕的優先 (youngness 分數高者出生晚、年齡小)
+        const scoreA = parseYoungnessScore(a.birth);
+        const scoreB = parseYoungnessScore(b.birth);
+        if (scoreA !== scoreB) {
+          return scoreB - scoreA;
+        }
+        return 0;
+      });
+    }
+
+    function renderStep5Tabs() {
+      const container = document.getElementById('step5-class-tabs');
+      if (!container) return;
+      container.innerHTML = schoolClasses.map(c => `
+        <button onclick="selectStep5Class('${c.className}')" class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${c.className === selectedClassId ? 'bg-indigo-600 text-white shadow-sm' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+          ${c.className} 班 (${(c.formalSorted || []).length}位正式)
+        </button>
+      `).join('');
+      document.getElementById('step5-class-summary').textContent = `目前班級：${selectedClassId} 班`;
+    }
+
+    function selectStep5Class(cName) {
+      selectedClassId = cName;
+      renderStep5Tabs();
+      renderStep5Table();
+    }
+
+    function moveStep5Item(index, direction) {
+      const currentClass = schoolClasses.find(c => c.className === selectedClassId);
+      if (!currentClass || !currentClass.formalSorted) return;
+      const list = currentClass.formalSorted;
+      const newIdx = index + direction;
+      if (newIdx < 0 || newIdx >= list.length) return;
+      const temp = list[index];
+      list[index] = list[newIdx];
+      list[newIdx] = temp;
+      renderStep5Table();
+    }
+
+    function renderStep5Table() {
+      const tbody = document.getElementById('step5-tbody');
+      if (!tbody) return;
+      const currentClass = schoolClasses.find(c => c.className === selectedClassId);
+      if (!currentClass || !currentClass.formalSorted || currentClass.formalSorted.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-slate-400">${selectedClassId} 班無任課之專任正式教師。</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = currentClass.formalSorted.map((t, idx) => {
+        const prev = currentClass.formalSorted[idx - 1];
+        const next = currentClass.formalSorted[idx + 1];
+        const isTied = (prev && Math.abs(prev.seniority - t.seniority) < 0.001) ||
+                       (next && Math.abs(next.seniority - t.seniority) < 0.001);
+
+        return `
+          <tr class="hover:bg-emerald-50/40 transition ${isTied ? 'bg-amber-50/30' : ''}">
+            <td class="p-3 text-center font-bold text-emerald-800 bg-slate-50 font-mono">正式第 ${idx + 1} 順位</td>
+            <td class="p-3 font-bold text-slate-800">${t.name}</td>
+            <td class="p-3 text-slate-700">${t.subject}</td>
+            <td class="p-3 font-bold text-indigo-700 text-sm">${t.seniority} 年</td>
+            <td class="p-3 font-medium text-slate-700">${t.birth || '<span class="text-slate-300">—</span>'}</td>
+            <td class="p-3 text-xs text-slate-600">
+              ${isTied ? `<span class="inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800 border border-amber-300">⚡ 年資相同(${t.seniority}年)：年紀輕者優先</span>` : '依年資排序'}
+            </td>
+            <td class="p-3 text-center space-x-1">
+              <button onclick="moveStep5Item(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-bold">↑ 上移</button>
+              <button onclick="moveStep5Item(${idx}, 1)" ${idx === currentClass.formalSorted.length - 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-bold">↓ 下移</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function goToStep6() {
+      schoolClasses.forEach(c => {
+        const proxyPart = (c.proxySorted || []).map((t, idx) => ({
+          ...t,
+          group: '長期代理 (長代優先)',
+          finalOrder: idx + 1,
+          ruleExplanation: `長代順位第 ${idx + 1} 位 (${t.category}科, 年資${t.seniority}年)`
+        }));
+
+        const formalPart = (c.formalSorted || []).map((t, idx) => {
+          const prev = c.formalSorted[idx - 1];
+          const next = c.formalSorted[idx + 1];
+          const isTied = (prev && Math.abs(prev.seniority - t.seniority) < 0.001) ||
+                         (next && Math.abs(next.seniority - t.seniority) < 0.001);
+          const tieNote = isTied ? ' [年資相同，年紀輕者優先]' : '';
+
+          return {
+            ...t,
+            group: '專任正式 (接續輪值)',
+            finalOrder: proxyPart.length + idx + 1,
+            ruleExplanation: `正式順位第 ${idx + 1} 位 (年資${t.seniority}年)${tieNote}`
+          };
+        });
+
+        c.finalRoster = [...proxyPart, ...formalPart];
+      });
+
+      renderStep6View();
+      switchStep(6);
+      showToast('🎉 各班獨立代導總輪值表已全數排定！', 'success');
+    }
+
+    function renderStep6View() {
+      const select = document.getElementById('step6-class-select');
+      if (select) {
+        select.innerHTML = schoolClasses.map(c => `
+          <option value="${c.className}">${c.className} 班</option>
+        `).join('');
+        if (selectedClassId) {
+          select.value = selectedClassId;
+        }
+      }
+      renderMatrixOverviewTable();
+      renderStep6SingleClassView();
+    }
+
+    // 渲染完全符合圖片格式的總表（無多餘序位數字）
+    function renderMatrixOverviewTable() {
+      const tbody = document.getElementById('matrix-overview-tbody');
+      if (!tbody) return;
+
+      if (schoolClasses.length === 0) {
+        tbody.innerHTML = `<tr><td class="p-6 text-center text-slate-400">目前尚無班級名冊資料。</td></tr>`;
+        return;
+      }
+
+      let maxSlots = 0;
+      schoolClasses.forEach(c => {
+        const len = c.finalRoster ? c.finalRoster.length : 0;
+        if (len > maxSlots) maxSlots = len;
+      });
+
+      let html = '';
+      schoolClasses.forEach(c => {
+        const roster = c.finalRoster || [];
+        const classCount = roster.length;
+
+        // 第一列：標題與序位數字 (只顯示到該班實際人數，多餘欄位保持純白無格線)
+        html += `<tr class="bg-white border-t-2 border-slate-400 font-sans text-xs">`;
+        html += `<td class="border border-slate-400 px-3 py-1.5 font-bold text-slate-900 w-36 whitespace-nowrap">代理導師序位表</td>`;
+        html += `<td class="border border-slate-400 px-3 py-1.5 font-bold text-slate-900 w-24 whitespace-nowrap bg-slate-50">班級順位</td>`;
+        
+        for (let i = 1; i <= maxSlots; i++) {
+          if (i <= classCount) {
+            html += `<td class="border border-slate-400 px-2 py-1.5 font-mono font-medium text-slate-800 min-w-[70px] text-center">${i}</td>`;
+          } else {
+            // 超出該班人數的格子：刪除數字且不加邊框，與截圖一致
+            html += `<td class="border-y border-transparent border-r border-transparent px-2 py-1.5 bg-white"></td>`;
+          }
+        }
+        html += `</tr>`;
+
+        // 第二列：班級代碼與老師姓名 (長代維持黃底，無人處不畫多餘邊框)
+        html += `<tr class="bg-white text-xs border-b border-slate-300">`;
+        html += `<td class="border border-slate-400 px-3 py-1.5"></td>`;
+        html += `<td class="border border-slate-400 px-3 py-1.5 font-black text-slate-900 font-mono text-sm bg-slate-50 text-center">${c.className}</td>`;
+        
+        for (let i = 0; i < maxSlots; i++) {
+          if (i < classCount) {
+            const teacher = roster[i];
+            const isProxy = teacher.type === '長期代理';
+            html += `<td class="border border-slate-400 px-2 py-1.5 font-bold whitespace-nowrap transition text-center ${isProxy ? 'bg-[#FFFF00] text-slate-950 shadow-inner' : 'bg-white text-slate-800'}" title="${teacher.name} (${teacher.subject}, ${teacher.type})">
+              ${teacher.name}
+            </td>`;
+          } else {
+            // 超出該班人數：空白且無邊框
+            html += `<td class="border-y border-transparent border-r border-transparent px-2 py-1.5 bg-white"></td>`;
+          }
+        }
+        html += `</tr>`;
+      });
+
+      tbody.innerHTML = html;
+    }
+
+    function switchToSingleClassView(cName) {
+      selectedClassId = cName;
+      step6ViewMode = 'single';
+      document.getElementById('step6-all-classes-view').classList.add('hidden');
+      document.getElementById('step6-single-class-view').classList.remove('hidden');
+      document.getElementById('step6-single-selector-container').classList.remove('hidden');
+
+      const select = document.getElementById('step6-class-select');
+      if (select) select.value = cName;
+
+      document.getElementById('view-mode-all-btn').className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200';
+      document.getElementById('view-mode-single-btn').className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white';
+
+      renderStep6SingleClassView();
+    }
+
+    function moveStep6SingleItem(index, direction) {
+      const currentClass = schoolClasses.find(c => c.className === selectedClassId);
+      if (!currentClass || !currentClass.finalRoster) return;
+      const list = currentClass.finalRoster;
+      const newIdx = index + direction;
+      if (newIdx < 0 || newIdx >= list.length) return;
+      const temp = list[index];
+      list[index] = list[newIdx];
+      list[newIdx] = temp;
+      renderStep6SingleClassView();
+      renderMatrixOverviewTable();
+    }
+
+    function renderStep6SingleClassView() {
+      const currentClass = schoolClasses.find(c => c.className === selectedClassId);
+      if (!currentClass) return;
+
+      document.getElementById('single-class-title').textContent = `${currentClass.className} 班 專屬代課導師輪值名冊`;
+
+      const tbody = document.getElementById('step6-single-tbody');
+      if (!tbody) return;
+
+      tbody.innerHTML = currentClass.finalRoster.map((t, idx) => `
+        <tr class="hover:bg-slate-50 transition ${t.type === '長期代理' ? 'bg-amber-100/60' : 'bg-emerald-50/20'}">
+          <td class="p-3 text-center font-black text-slate-800 bg-white font-mono">
+            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full ${t.type === '長期代理' ? 'bg-[#FFFF00] text-slate-900 border border-amber-400' : 'bg-slate-100 text-slate-800'} font-bold">${idx + 1}</span>
+          </td>
+          <td class="p-3">
+            <span class="px-2.5 py-0.5 rounded text-xs font-bold ${t.type === '長期代理' ? 'bg-[#FFFF00] text-slate-900 border border-amber-400' : 'bg-emerald-100 text-emerald-800'}">
+              ${t.group}
+            </span>
+          </td>
+          <td class="p-3 font-bold text-slate-900 text-sm">${t.name}</td>
+          <td class="p-3 text-slate-700">${t.subject}</td>
+          <td class="p-3 text-slate-600">${t.type === '長期代理' ? '長期代理 (長代)' : t.type}</td>
+          <td class="p-3 font-bold text-indigo-700">${t.seniority} 年</td>
+          <td class="p-3 text-slate-600">${t.birth || '—'}</td>
+          <td class="p-3 text-xs text-slate-500 font-mono">${t.ruleExplanation}</td>
+          <td class="p-3 text-center space-x-1">
+            <button onclick="moveStep6SingleItem(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-bold">↑ 上移</button>
+            <button onclick="moveStep6SingleItem(${idx}, 1)" ${idx === currentClass.finalRoster.length - 1 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-bold">↓ 下移</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // 匯出 Excel：完全依照使用者截圖二列架構呈現，刪除多餘序位數字
+    function exportToExcel() {
+      if (schoolClasses.length === 0) {
+        showToast('名冊為空，無法匯出！', 'error');
+        return;
+      }
+
+      const wb = XLSX.utils.book_new();
+      const matrixRows = [];
+
+      schoolClasses.forEach(c => {
+        const roster = c.finalRoster || [];
+        const classCount = roster.length;
+
+        // 第一列：只輸出到該班實際人數 (例如 10 人就只輸出 1 到 10)
+        const headerRow = ['代理導師序位表', '班級順位'];
+        for (let i = 1; i <= classCount; i++) {
+          headerRow.push(i);
+        }
+        matrixRows.push(headerRow);
+
+        // 第二列：班級與該班老師姓名
+        const dataRow = ['', c.className];
+        for (let i = 0; i < classCount; i++) {
+          dataRow.push(roster[i].name);
+        }
+        matrixRows.push(dataRow);
+      });
+
+      const wsMatrix = XLSX.utils.aoa_to_sheet(matrixRows);
+      XLSX.utils.book_append_sheet(wb, wsMatrix, '代理導師序位總表');
+
+      // 同時保留各班詳細明細分頁
+      schoolClasses.forEach(c => {
+        const classRows = [
+          [`115學年度 ${c.className} 班 代課導師輪值順序名冊`],
+          ['班級', `${c.className} 班`, '列印日期', new Date().toLocaleDateString('zh-TW')],
+          [],
+          ['順位', '輪值群組', '教師姓名', '任課科目', '身分聘別', '年資(年)', '出生年月日/年次', '排定說明']
+        ];
+        c.finalRoster.forEach((t, idx) => {
+          classRows.push([
+            idx + 1,
+            t.group,
+            t.name,
+            t.subject,
+            t.type === '長期代理' ? '長期代理(長代)' : t.type,
+            t.seniority,
+            t.birth || '',
+            t.ruleExplanation
+          ]);
+        });
+        const wsClass = XLSX.utils.aoa_to_sheet(classRows);
+        const sheetName = `${c.className}班代導`.substring(0, 30);
+        XLSX.utils.book_append_sheet(wb, wsClass, sheetName);
+      });
+
+      XLSX.writeFile(wb, '115學年度_代理導師序位總表.xlsx');
+      showToast('已成功下載依照截圖格式排定的 Excel 總表！', 'success');
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('input-schedule-file')?.addEventListener('change', handleScheduleFile);
+      document.getElementById('input-seniority-file')?.addEventListener('change', handleSeniorityFile);
+      document.getElementById('input-roster-file')?.addEventListener('change', handleRosterExcelFile);
+
+      document.getElementById('load-sample-btn')?.addEventListener('click', loadSampleData);
+
+      document.getElementById('reset-system-btn')?.addEventListener('click', () => {
+        schoolClasses = [];
+        globalTeacherMap.clear();
+        selectedClassId = '';
+        renderClassesOverview();
+        switchStep(1);
+        const schedStatus = document.getElementById('file-schedule-status');
+        const senStatus = document.getElementById('file-seniority-status');
+        const rosStatus = document.getElementById('file-roster-status');
+        if (schedStatus) schedStatus.textContent = '尚未選取檔案';
+        if (senStatus) senStatus.textContent = '尚未選取檔案';
+        if (rosStatus) rosStatus.textContent = '尚未選取檔案';
+        const schedInput = document.getElementById('input-schedule-file');
+        const senInput = document.getElementById('input-seniority-file');
+        const rosInput = document.getElementById('input-roster-file');
+        if (schedInput) schedInput.value = '';
+        if (senInput) senInput.value = '';
+        if (rosInput) rosInput.value = '';
+        showToast('系統已重設為初始狀態', 'info');
+      });
+
+      document.getElementById('btn-goto-step-2')?.addEventListener('click', goToStep2);
+      document.getElementById('btn-back-to-step-1')?.addEventListener('click', () => switchStep(1));
+      document.getElementById('btn-goto-step-3')?.addEventListener('click', goToStep3);
+      document.getElementById('btn-back-to-step-2')?.addEventListener('click', () => switchStep(2));
+      document.getElementById('btn-goto-step-4')?.addEventListener('click', goToStep4);
+      document.getElementById('btn-back-to-step-3')?.addEventListener('click', () => switchStep(3));
+      document.getElementById('btn-goto-step-5')?.addEventListener('click', goToStep5);
+      document.getElementById('btn-back-to-step-4')?.addEventListener('click', () => switchStep(4));
+      document.getElementById('btn-goto-step-6')?.addEventListener('click', goToStep6);
+      document.getElementById('btn-back-to-step-5')?.addEventListener('click', () => switchStep(5));
+
+      const ascBtn = document.getElementById('seniority-asc-btn');
+      const descBtn = document.getElementById('seniority-desc-btn');
+
+      ascBtn?.addEventListener('click', () => {
+        senioritySortOrder = 'asc';
+        ascBtn.className = 'px-2 py-1 rounded bg-white shadow-sm font-semibold text-indigo-700 border border-slate-200';
+        descBtn.className = 'px-2 py-1 rounded text-slate-600 hover:text-slate-900';
+        schoolClasses.forEach(c => {
+          c.formalSorted = sortFormalTeachers(c.formalSorted || []);
+        });
+        renderStep5Table();
+      });
+
+      descBtn?.addEventListener('click', () => {
+        senioritySortOrder = 'desc';
+        descBtn.className = 'px-2 py-1 rounded bg-white shadow-sm font-semibold text-indigo-700 border border-slate-200';
+        ascBtn.className = 'px-2 py-1 rounded text-slate-600 hover:text-slate-900';
+        schoolClasses.forEach(c => {
+          c.formalSorted = sortFormalTeachers(c.formalSorted || []);
+        });
+        renderStep5Table();
+      });
+
+      document.getElementById('view-mode-all-btn')?.addEventListener('click', () => {
+        step6ViewMode = 'all';
+        document.getElementById('step6-all-classes-view').classList.remove('hidden');
+        document.getElementById('step6-single-class-view').classList.add('hidden');
+        document.getElementById('step6-single-selector-container').classList.add('hidden');
+        document.getElementById('view-mode-all-btn').className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white';
+        document.getElementById('view-mode-single-btn').className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-700 hover:bg-slate-200';
+      });
+
+      document.getElementById('view-mode-single-btn')?.addEventListener('click', () => {
+        if (!selectedClassId && schoolClasses.length > 0) selectedClassId = schoolClasses[0].className;
+        switchToSingleClassView(selectedClassId);
+      });
+
+      document.getElementById('step6-class-select')?.addEventListener('change', (e) => {
+        selectedClassId = e.target.value;
+        renderStep6SingleClassView();
+      });
+
+      document.getElementById('export-excel-btn')?.addEventListener('click', exportToExcel);
+      document.getElementById('print-roster-btn')?.addEventListener('click', () => window.print());
+
+      renderClassesOverview();
+    });
+  </script>
+</body>
+</html>
