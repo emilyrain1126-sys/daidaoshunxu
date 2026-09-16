@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>智慧校務排代導輪值系統</title>
+  <title>智慧校務排代導輪值系統 (分班獨立排定版)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- SheetJS for Excel Reading and Writing -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -173,7 +173,7 @@
               <span class="text-xs text-slate-400 font-mono">.xlsx, .xls</span>
             </div>
             <h3 class="font-bold text-slate-800 text-sm">教師年資職稱表</h3>
-            <p class="text-xs text-slate-500 mt-1">用於規則 2 與規則 5：優先採計<span class="text-indigo-600 font-bold">「114連續專任計算」</span>欄位之數值作為連續專任年資，並比對專任職務。</p>
+            <p class="text-xs text-slate-500 mt-1">用於規則 2 與規則 5：嚴格採計<span class="text-indigo-600 font-bold">「114連續專任計算」</span>欄位之數值，並直接使用<span class="text-indigo-600 font-bold">「年紀」</span>欄位之數字。</p>
           </div>
           <div class="mt-4 pt-3 border-t border-slate-100">
             <label class="cursor-pointer inline-flex items-center justify-center w-full px-3 py-2 border border-slate-300 rounded-xl text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 transition">
@@ -857,27 +857,26 @@
     let schoolClasses = [];
     let globalTeacherMap = new Map();
 
-    // 直接解析實際年紀（檔案中給的即為實際實足年齡，不作年次換算）
-    function parseAgeInfo(val, colHeader = '') {
+    // 直接解析並使用表格「年紀」欄位裡的數字
+    function parseAgeInfo(val) {
       if (val === undefined || val === null || val === '') return { display: '—', num: null };
 
-      // 1. 若為數值（直接代表年紀）
       if (typeof val === 'number') {
-        return { display: `${val}歲`, num: val };
+        return { display: String(val), num: val };
       }
 
       const s = String(val).trim();
       if (!s || s === '—' || s === '-') return { display: '—', num: null };
 
       // 提取字串中的年齡數字，例如「35歲」或「35」
-      const numMatch = s.match(/^(\d{1,3}(?:\.\d+)?)歲?$/);
+      const numMatch = s.match(/^(\d{1,3}(?:\.\d+)?)/);
       if (numMatch) {
         const num = parseFloat(numMatch[1]);
-        return { display: `${num}歲`, num: num };
+        return { display: String(num), num: num };
       }
 
       const anyNum = parseFloat(s);
-      return !isNaN(anyNum) ? { display: `${anyNum}歲`, num: anyNum } : { display: s, num: null };
+      return !isNaN(anyNum) ? { display: String(anyNum), num: anyNum } : { display: s, num: null };
     }
 
     function normalizeTeacherType(val = '', roleVal = '') {
@@ -1216,7 +1215,7 @@
         row.forEach(cell => {
           const v = String(cell || '').replace(/[\s\u00A0\u3000]/g, '');
           if (/^(?:教師)?姓名$|^名字$/i.test(v)) { score += 25; hasName = true; }
-          if (/114連續專任|連續專任計算|連續專任/i.test(v)) { score += 40; hasContinuousSen = true; }
+          if (/連續專任計算/i.test(v)) { score += 40; hasContinuousSen = true; }
           if (/年資|年紀|年齡|現任職務|職稱/i.test(v)) score += 10;
         });
       }
@@ -1288,8 +1287,8 @@
           renderClassesOverview();
 
           const parsedTotal = loadedTeacherNames.size;
-          document.getElementById('file-seniority-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})：共讀取 ${parsedTotal} 位現職教師，連續專任(${foundSenCol ? '✓' : '—'})，年紀(${foundAgeCol ? '✓' : '—'})</span>`;
-          showToast(`教師年資職稱表載入成功！已更新 ${parsedTotal} 位現職師資年資。`, 'success');
+          document.getElementById('file-seniority-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})：讀取 ${parsedTotal} 位教師，連續專任計算(${foundSenCol ? '✓' : '未找到'})，年紀(${foundAgeCol ? '✓' : '未找到'})</span>`;
+          showToast(`教師年資職稱表載入成功！已更新 ${parsedTotal} 位教師的「連續專任計算」與「年紀」。`, 'success');
         } catch (err) {
           console.error(err);
           showToast('年資職稱表解析失敗！', 'error');
@@ -1300,56 +1299,53 @@
 
     function parseSeniorityTable(rows) {
       if (!rows || rows.length === 0) return null;
-      let nameCol = -1, continuousSenCol = -1, generalSenCol = -1, roleCol = -1, typeCol = -1, ageCol = -1;
-      let ageColHeader = '';
-      let bestHeaderRow = -1;
-      let bestScore = -1;
+      let nameCol = -1, continuousSenCol = -1, roleCol = -1, typeCol = -1, ageCol = -1;
+      let dataStartRow = 1;
 
-      // 智慧表頭評分機制：避免大標題列干擾
-      for (let r = 0; r < Math.min(rows.length, 25); r++) {
+      // 只要包含「連續專任計算」文字即自動鎖定
+      for (let r = 0; r < Math.min(rows.length, 15); r++) {
         const row = rows[r];
         if (!Array.isArray(row)) continue;
-        let score = 0;
-        row.forEach(cell => {
-          const v = String(cell || '').replace(/[\s\u00A0\u3000]/g, '');
-          if (/^(?:教師)?姓名$|^名字$/i.test(v)) score += 25;
-          else if (/姓名/i.test(v) && !/學校|學年|名冊|一覽表|填報/.test(v)) score += 12;
-          if (/114連續專任|連續專任計算|連續專任|專任連續/i.test(v)) score += 30;
-          if (/年資|年紀|年齡|職稱|聘別/i.test(v)) score += 5;
-        });
-        if (score > bestScore) {
-          bestScore = score;
-          bestHeaderRow = r;
+        for (let c = 0; c < row.length; c++) {
+          const raw = String(row[c] || '');
+          const val = raw.replace(/[\s\u00A0\u3000\r\n]/g, '');
+          if (!val) continue;
+
+          // 姓名欄位
+          if (/^(?:教師)?姓名$|^名字$/i.test(val) && nameCol === -1) {
+            nameCol = c;
+            dataStartRow = Math.max(dataStartRow, r + 1);
+          } else if (/姓名/i.test(val) && !/學校|學年|名冊|班級/.test(val) && nameCol === -1) {
+            nameCol = c;
+            dataStartRow = Math.max(dataStartRow, r + 1);
+          }
+
+          // 連續專任計算：只要包含「連續專任計算」六個字即鎖定
+          if (/連續專任計算/i.test(val) && continuousSenCol === -1) {
+            continuousSenCol = c;
+            dataStartRow = Math.max(dataStartRow, r + 1);
+          }
+
+          // 年紀：直接鎖定「年紀」或「年齡」
+          if (/^年[紀齡]$|年[紀齡]數?|實足年[紀齡]/i.test(val) && !/年資|年級|學年/.test(val)) {
+            ageCol = c;
+            dataStartRow = Math.max(dataStartRow, r + 1);
+          } else if (ageCol === -1 && /年[紀齡]/i.test(val) && !/年資|年級|學年/.test(val)) {
+            ageCol = c;
+            dataStartRow = Math.max(dataStartRow, r + 1);
+          }
+
+          if (/職稱|現任職務|職務/i.test(val) && roleCol === -1) roleCol = c;
+          if (/身分|聘別|類別|代理|長代/i.test(val) && typeCol === -1) typeCol = c;
         }
       }
 
-      if (bestHeaderRow === -1 || bestScore < 10) bestHeaderRow = 0;
-
-      const headerRow = rows[bestHeaderRow] || [];
-      headerRow.forEach((cell, idx) => {
-        const rawVal = String(cell || '');
-        const val = rawVal.replace(/[\s\u00A0\u3000]/g, '');
-
-        if (/^(?:教師)?姓名$|^名字$/i.test(val) && nameCol === -1) nameCol = idx;
-        else if (/姓名/i.test(val) && !/學校|學年|名冊|班級/.test(val) && nameCol === -1) nameCol = idx;
-
-        if (/114連續專任|連續專任計算|連續專任|專任連續/i.test(val)) continuousSenCol = idx;
-        else if (/服務年資|學校年資|本校年資|任職年資|年資/i.test(val) && generalSenCol === -1) generalSenCol = idx;
-
-        if (/年[紀齡歲]|出生|生日|實足/i.test(val) && !/年資|年級|學年/.test(val) && ageCol === -1) {
-          ageCol = idx;
-          ageColHeader = val;
-        }
-        if (/職稱|現任職務|職務/i.test(val) && roleCol === -1) roleCol = idx;
-        if (/身分|聘別|類別|代理|長代/i.test(val) && typeCol === -1) typeCol = idx;
-      });
-
-      // 備用方案：若無標準「姓名」表頭，搜尋中文人名最密集的欄位
+      // 備用搜尋：若無明確姓名表頭，搜尋中文字人名最密集欄位
       if (nameCol === -1) {
         let maxNameCount = 0;
         for (let col = 0; col < 10; col++) {
           let count = 0;
-          for (let r = bestHeaderRow + 1; r < Math.min(rows.length, 30); r++) {
+          for (let r = 1; r < Math.min(rows.length, 30); r++) {
             const raw = cleanTeacherName(rows[r]?.[col]);
             if (raw && raw.length >= 2 && raw.length <= 4 && /^[\u4e00-\u9fa5]+$/.test(raw)) count++;
           }
@@ -1361,31 +1357,31 @@
         if (nameCol === -1) nameCol = 0;
       }
 
-      const finalSenCol = continuousSenCol !== -1 ? continuousSenCol : (generalSenCol !== -1 ? generalSenCol : -1);
       const validTeachers = [];
 
-      for (let r = bestHeaderRow + 1; r < rows.length; r++) {
+      for (let r = dataStartRow; r < rows.length; r++) {
         const row = rows[r];
         if (!row) continue;
         const rawName = String(row[nameCol] || '').trim();
         const teacherName = cleanTeacherName(rawName);
         if (!isValidTeacherName(teacherName)) continue;
 
-        const hasSenValue = (finalSenCol !== -1 && row[finalSenCol] !== undefined && String(row[finalSenCol]).trim() !== '');
-        const hasRoleValue = (roleCol !== -1 && row[roleCol] !== undefined && String(row[roleCol]).trim() !== '');
-        const hasAgeValue = (ageCol !== -1 && row[ageCol] !== undefined && String(row[ageCol]).trim() !== '');
-
-        // 若該行除了名字以外，年資、職稱與年齡全為空，很可能是雜訊或表格附錄，跳過
-        if (!hasSenValue && !hasRoleValue && !hasAgeValue) {
-          const nonBlankCount = row.filter(c => c !== undefined && c !== null && String(c).trim() !== '').length;
-          if (nonBlankCount <= 1) continue;
+        // 連續專任計算：嚴格只取「114連續專任計算」欄位中的數值
+        let sen = undefined;
+        if (continuousSenCol !== -1 && row[continuousSenCol] !== undefined && row[continuousSenCol] !== null) {
+          const rawSenStr = String(row[continuousSenCol]).trim();
+          if (rawSenStr !== '' && rawSenStr !== '—' && rawSenStr !== '-') {
+            const parsedSen = parseFloat(rawSenStr);
+            if (!isNaN(parsedSen)) {
+              sen = parsedSen;
+            }
+          }
         }
 
-        const sen = hasSenValue ? (parseFloat(row[finalSenCol]) || 0) : undefined;
-        
-        let ageInfo = null;
-        if (ageCol !== -1 && row[ageCol] !== undefined && String(row[ageCol]).trim() !== '') {
-          ageInfo = parseAgeInfo(row[ageCol], ageColHeader);
+        // 年紀：直接取「年紀」欄位中的數字
+        let ageInfo = { display: '—', num: null };
+        if (ageCol !== -1 && row[ageCol] !== undefined && row[ageCol] !== null) {
+          ageInfo = parseAgeInfo(row[ageCol]);
         }
 
         const rawRole = roleCol !== -1 ? String(row[roleCol] || '') : '';
@@ -1500,7 +1496,7 @@
       if (bestHeaderRow === -1 || bestScore < 15) bestHeaderRow = 0;
 
       const headerRow = rows[bestHeaderRow] || [];
-      headerRow.forEach((cell, idx) => {
+        headerRow.forEach((cell, idx) => {
         const rawVal = String(cell || '');
         const val = rawVal.replace(/[\s\u00A0\u3000]/g, '');
 
@@ -1513,10 +1509,11 @@
         if (/身分|聘別|身分別|類別|代理|教師身分|任用/i.test(val) && typeCol === -1) typeCol = idx;
         if (/職稱|現任職務|職務|兼任|兼職/i.test(val) && roleCol === -1) roleCol = idx;
         if (/科別|科目|領域|專長|任教/i.test(val) && subCol === -1) subCol = idx;
-        if (/114連續專任|連續專任計算|連續專任|專任連續/i.test(val) && senCol === -1) senCol = idx;
-        if (/年[紀齡歲次]|出生|生日|實足/i.test(val) && !/年資|年級|學年/.test(val) && ageCol === -1) {
+        if (/連續專任計算/i.test(val) && senCol === -1) senCol = idx;
+        if (/^年[紀齡]$|年[紀齡]數?|實足年[紀齡]/i.test(val) && !/年資|年級|學年/.test(val) && ageCol === -1) {
           ageCol = idx;
-          ageColHeader = val;
+        } else if (ageCol === -1 && /年[紀齡]/i.test(val) && !/年資|年級|學年/.test(val)) {
+          ageCol = idx;
         }
         if (/備註|說明/i.test(val) && noteCol === -1) noteCol = idx;
         if (/序號|編號|項次|代號|NO/i.test(val) && seqCol === -1) seqCol = idx;
@@ -1644,22 +1641,29 @@
       schoolClasses.forEach(c => {
         c.teachers.forEach(t => {
           const g = globalTeacherMap.get(t.name);
-          if (g && (g.fromRoster || g.inRoster)) {
-            t.inRoster = true;
-            if (g.type) t.type = g.type;
-            if (t.type === '長期代理') {
-              t.seniority = ''; // 代理教師不採計也不顯示年資
-            } else if (g.seniority !== undefined && g.seniority !== '') {
-              t.seniority = g.seniority;
+          if (g) {
+            // 同步「114連續專任計算」與「年紀」
+            if (t.type !== '長期代理' && g.type !== '長期代理') {
+              if (g.seniority !== undefined && g.seniority !== '') {
+                t.seniority = g.seniority;
+              }
+            } else {
+              t.seniority = '';
             }
-            if (g.age) t.age = g.age;
+
+            if (g.age !== undefined && g.age !== '') t.age = g.age;
             if (g.ageNum !== undefined && g.ageNum !== null) t.ageNum = g.ageNum;
+            if (g.type) t.type = g.type;
             if (g.role) t.role = g.role;
             if (g.homeroomClass) t.homeroomClass = g.homeroomClass;
-          } else {
-            if (hasUploadedRoster) {
+
+            if (g.fromRoster || g.inRoster) {
+              t.inRoster = true;
+            } else if (hasUploadedRoster) {
               t.inRoster = false;
             }
+          } else if (hasUploadedRoster) {
+            t.inRoster = false;
           }
         });
       });
@@ -2098,18 +2102,18 @@
 
     function sortFormalTeachers(list) {
       return [...list].sort((a, b) => {
-        const senA = parseFloat(a.seniority) || 0;
-        const senB = parseFloat(b.seniority) || 0;
+        const senA = (a.seniority !== undefined && a.seniority !== '') ? parseFloat(a.seniority) : 0;
+        const senB = (b.seniority !== undefined && b.seniority !== '') ? parseFloat(b.seniority) : 0;
         
         if (Math.abs(senA - senB) > 0.0001) {
           return senioritySortOrder === 'asc' ? senA - senB : senB - senA;
         }
 
-        // 連續專任計算相同：依「年紀輕的優先」
+        // 連續專任計算相同：依「年紀裡的數字」由小至大排序（年紀輕的優先）
         const ageA = a.ageNum !== undefined && a.ageNum !== null ? a.ageNum : parseAgeInfo(a.age).num;
         const ageB = b.ageNum !== undefined && b.ageNum !== null ? b.ageNum : parseAgeInfo(b.age).num;
         if (ageA !== null && ageB !== null && ageA !== ageB) {
-          return ageA - ageB; // 歲數小 (年紀輕) 優先
+          return ageA - ageB; // 數字小者（年紀輕）優先
         }
 
         return 0;
@@ -2189,7 +2193,7 @@
             <td class="p-3 font-bold text-slate-800">${t.name}</td>
             <td class="p-3 text-slate-700">${t.subject}</td>
             <td class="p-3 font-black text-indigo-700 text-sm">${t.seniority !== undefined && t.seniority !== '' ? t.seniority : 0}</td>
-            <td class="p-3 font-semibold text-slate-700">${t.age || '—'}</td>
+            <td class="p-3 font-semibold text-slate-700">${t.age !== undefined && t.age !== '' ? t.age : '—'}</td>
             <td class="p-3 text-xs text-slate-600">${ruleText}</td>
             <td class="p-3 text-center space-x-1">
               <button onclick="moveStep5Item(${idx}, -1)" ${idx === 0 ? 'disabled class="opacity-30 cursor-not-allowed"' : 'class="hover:bg-slate-200"'} class="px-2 py-1 bg-slate-100 text-slate-700 rounded text-xs font-bold">↑ 上移</button>
@@ -2214,7 +2218,7 @@
             ...t,
             group: '專任正式 (接續輪值)',
             finalOrder: proxyPart.length + idx + 1,
-            ruleExplanation: `正式順位第 ${idx + 1} 位 (連續專任${t.seniority !== undefined ? t.seniority : 0}${t.age && t.age !== '—' ? ', ' + t.age : ''})`
+            ruleExplanation: `正式順位第 ${idx + 1} 位 (連續專任${t.seniority !== undefined && t.seniority !== '' ? t.seniority : 0}${t.age && t.age !== '—' ? ', 年紀' + t.age : ''})`
           };
         });
 
