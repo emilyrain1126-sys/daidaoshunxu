@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>智慧校務排代導輪值系統 (分班獨立排定版)</title>
+  <title>智慧校務排代導輪值系統</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- SheetJS for Excel Reading and Writing -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -899,14 +899,22 @@
 
     function isValidTeacherName(val) {
       if (!val) return false;
-      const s = String(val).trim();
+      const s = String(val).replace(/[\s\u00A0\u3000]/g, '');
       if (!s) return false;
       if (/^\d+(\.\d+)?$/.test(s)) return false;
       if (/^[789一二三七八九]\d{0,2}班?$/.test(s)) return false;
       if (/^[1-9]年\d{1,2}班?$/.test(s)) return false;
       if (/^[國七八九][一二三四五六七八九]/.test(s) && /班$/.test(s)) return false;
-      if (/^(班級|年級|座號|序號|編號|代碼|科目|節數|每週節數|合計|總計|平均|備註|任課|教師|姓名|職稱|聘別|星期|時間|教室|未排|早修|午休|導師時間|彈性|社團|兼課|鐘點|課程|無|空白|代理導師序位表|班級順位|身分|現任職務|教職員|教職員工|簽到|簽退)$/i.test(s)) return false;
-      if (s.length < 2 || s.length > 12) return false;
+      
+      // 排除非人名詞彙（科目、處室、行政職稱、狀態備註、標題文字等）
+      const invalidExactRegex = /^(?:班級|年級|座號|序號|編號|代碼|科目|節數|每週節數|合計|總計|小計|平均|備註|任課|教師|姓名|職稱|聘別|星期|時間|教室|未排|早修|午休|導師時間|彈性|社團|兼課|鐘點|課程|無|空白|代理導師序位表|班級順位|身分|現任職務|教職員|教職員工|簽到|簽退|填表|說明|注意事項|人事室|教務處|學務處|總務處|輔導室|校長室|特教班|幼兒園|專任教師|代理教師|正式教師|兼任教師|留職停薪|育嬰留停|侍親留停|退休人員|離職人員|調出人員|借調人員|國文科|英文科|數學科|社會科|自然科|藝能科)$/i;
+      if (invalidExactRegex.test(s)) return false;
+
+      // 排除包含特定組織、處室或說明性質的字串
+      if (/(?:國中|國小|高中|學校|學年度|委員會|教研會|人事室|處室|輔導室|說明|注意事項|留職停薪|退休名單|離職人員)/.test(s)) return false;
+
+      // 中文姓名通常為 2 至 4 字
+      if (s.length < 2 || s.length > 6) return false;
       return true;
     }
 
@@ -1196,6 +1204,25 @@
       return false;
     }
 
+    // 評估工作表是否為當前學年度的年資表
+    function inspectSheetSeniorityHeader(rows) {
+      if (!rows || rows.length === 0) return { score: 0, hasContinuousSen: false, hasName: false };
+      let score = 0;
+      let hasContinuousSen = false;
+      let hasName = false;
+      for (let r = 0; r < Math.min(rows.length, 20); r++) {
+        const row = rows[r];
+        if (!Array.isArray(row)) continue;
+        row.forEach(cell => {
+          const v = String(cell || '').replace(/[\s\u00A0\u3000]/g, '');
+          if (/^(?:教師)?姓名$|^名字$/i.test(v)) { score += 25; hasName = true; }
+          if (/114連續專任|連續專任計算|連續專任/i.test(v)) { score += 40; hasContinuousSen = true; }
+          if (/年資|年紀|年齡|現任職務|職稱/i.test(v)) score += 10;
+        });
+      }
+      return { score, hasContinuousSen, hasName };
+    }
+
     function handleSeniorityFile(e) {
       const file = e.target.files[0];
       if (!file) return;
@@ -1205,23 +1232,64 @@
           const data = new Uint8Array(evt.target.result);
           const workbook = XLSX.read(data, { type: 'array', cellDates: true });
           
-          let parsedTotal = 0;
           let foundAgeCol = false;
           let foundSenCol = false;
+          const loadedTeacherNames = new Set();
 
+          // 1. 評估所有工作表，過濾掉舊年份 (如 113, 112, 111, 歷年, 退休, 備份)
+          let candidateSheets = [];
           workbook.SheetNames.forEach(sheetName => {
+            const sName = sheetName.trim();
+            const isOldYear = /11[0-3]|10\d|歷年|歷史|舊|備份|退休|離職|範本|說明/i.test(sName);
+            const isCurrentYear = /11[4-5]|專任|年資|名冊/i.test(sName);
+            
             const sheet = workbook.Sheets[sheetName];
             const json = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-            const result = parseSeniorityTable(json);
+            if (!json || json.length === 0) return;
+
+            const check = inspectSheetSeniorityHeader(json);
+            candidateSheets.push({
+              sheetName: sName,
+              sheet: sheet,
+              json: json,
+              score: check.score + (isCurrentYear ? 50 : 0) - (isOldYear ? 120 : 0),
+              hasContinuousSen: check.hasContinuousSen,
+              hasName: check.hasName
+            });
+          });
+
+          candidateSheets.sort((a, b) => b.score - a.score);
+
+          // 若有工作表高度符合連續專任特徵，優先鎖定該主工作表，避免多頁累加過去歷史
+          let sheetsToProcess = [];
+          if (candidateSheets.length > 0 && candidateSheets[0].score >= 30) {
+            const topScore = candidateSheets[0].score;
+            sheetsToProcess = candidateSheets.filter(cs => cs.score >= topScore - 20 && cs.score > 25);
+          } else {
+            sheetsToProcess = candidateSheets.filter(cs => cs.score > 0);
+          }
+
+          if (sheetsToProcess.length === 0 && candidateSheets.length > 0) {
+            sheetsToProcess = [candidateSheets[0]];
+          }
+
+          sheetsToProcess.forEach(cs => {
+            const result = parseSeniorityTable(cs.json);
             if (result) {
-              parsedTotal += result.count || 0;
               if (result.foundAge) foundAgeCol = true;
               if (result.foundSen) foundSenCol = true;
+              if (result.validTeachers) {
+                result.validTeachers.forEach(n => loadedTeacherNames.add(n));
+              }
             }
           });
 
-          document.getElementById('file-seniority-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})：共讀取 ${parsedTotal} 位，連續專任(${foundSenCol ? '✓' : '—'})，年紀(${foundAgeCol ? '✓' : '—'})</span>`;
-          showToast(`教師年資職稱表載入成功！已更新 ${parsedTotal} 位師資年資資料。`, 'success');
+          applyGlobalMapToClasses();
+          renderClassesOverview();
+
+          const parsedTotal = loadedTeacherNames.size;
+          document.getElementById('file-seniority-status').innerHTML = `<span class="text-emerald-600 font-bold">✓ 已匯入 (${file.name})：共讀取 ${parsedTotal} 位現職教師，連續專任(${foundSenCol ? '✓' : '—'})，年紀(${foundAgeCol ? '✓' : '—'})</span>`;
+          showToast(`教師年資職稱表載入成功！已更新 ${parsedTotal} 位現職師資年資。`, 'success');
         } catch (err) {
           console.error(err);
           showToast('年資職稱表解析失敗！', 'error');
@@ -1244,9 +1312,9 @@
         let score = 0;
         row.forEach(cell => {
           const v = String(cell || '').replace(/[\s\u00A0\u3000]/g, '');
-          if (/^(?:教師)?姓名$|^名字$/i.test(v)) score += 20;
-          else if (/姓名/i.test(v) && !/學校|學年|名冊|一覽表/.test(v)) score += 10;
-          if (/114連續專任|連續專任計算|連續專任/i.test(v)) score += 15;
+          if (/^(?:教師)?姓名$|^名字$/i.test(v)) score += 25;
+          else if (/姓名/i.test(v) && !/學校|學年|名冊|一覽表|填報/.test(v)) score += 12;
+          if (/114連續專任|連續專任計算|連續專任|專任連續/i.test(v)) score += 30;
           if (/年資|年紀|年齡|職稱|聘別/i.test(v)) score += 5;
         });
         if (score > bestScore) {
@@ -1294,8 +1362,8 @@
       }
 
       const finalSenCol = continuousSenCol !== -1 ? continuousSenCol : (generalSenCol !== -1 ? generalSenCol : -1);
+      const validTeachers = [];
 
-      let recordCount = 0;
       for (let r = bestHeaderRow + 1; r < rows.length; r++) {
         const row = rows[r];
         if (!row) continue;
@@ -1304,6 +1372,15 @@
         if (!isValidTeacherName(teacherName)) continue;
 
         const hasSenValue = (finalSenCol !== -1 && row[finalSenCol] !== undefined && String(row[finalSenCol]).trim() !== '');
+        const hasRoleValue = (roleCol !== -1 && row[roleCol] !== undefined && String(row[roleCol]).trim() !== '');
+        const hasAgeValue = (ageCol !== -1 && row[ageCol] !== undefined && String(row[ageCol]).trim() !== '');
+
+        // 若該行除了名字以外，年資、職稱與年齡全為空，很可能是雜訊或表格附錄，跳過
+        if (!hasSenValue && !hasRoleValue && !hasAgeValue) {
+          const nonBlankCount = row.filter(c => c !== undefined && c !== null && String(c).trim() !== '').length;
+          if (nonBlankCount <= 1) continue;
+        }
+
         const sen = hasSenValue ? (parseFloat(row[finalSenCol]) || 0) : undefined;
         
         let ageInfo = null;
@@ -1325,12 +1402,15 @@
           role: role || existing.role || '專任教師',
           type: type === '長期代理' ? '長期代理' : (existing.type || type || '正式教師')
         });
-        recordCount++;
+        validTeachers.push(teacherName);
       }
 
-      applyGlobalMapToClasses();
-      renderClassesOverview();
-      return { count: recordCount, foundAge: ageCol !== -1, foundSen: continuousSenCol !== -1 };
+      return {
+        count: validTeachers.length,
+        validTeachers: validTeachers,
+        foundAge: ageCol !== -1,
+        foundSen: continuousSenCol !== -1
+      };
     }
 
     function handleRosterExcelFile(e) {
